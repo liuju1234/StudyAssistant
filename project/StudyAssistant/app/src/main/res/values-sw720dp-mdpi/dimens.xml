@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="item_type_width">100dp</dimen>
+    <dimen name="item_content_width">1000dp</dimen>
+    <dimen name="item_height">100dp</dimen>
+    <dimen name="item_type_text_size">20sp</dimen>
+    <dimen name="item_content_text_size">40sp</dimen>
+    <dimen name="table_h_padding">70dp</dimen>
+    <dimen name="table_line_width">5dp</dimen>
+    <dimen name="table_text_size">40dp</dimen>
+</resources>
