@@ -1,6 +1,7 @@
 package com.liujk.study_assistant.view
 
 import android.content.Context
+import android.os.Build
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.KeyEvent.KEYCODE_BACK
@@ -35,6 +36,9 @@ class MyWebView : WebView {
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE)
         webSettings.setAllowUniversalAccessFromFileURLs(true)
         webSettings.setLoadsImagesAutomatically(true)
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        }
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
