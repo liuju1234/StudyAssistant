@@ -17,7 +17,7 @@ class Storage {
             val dirs = context.getExternalFilesDirs(Environment.DIRECTORY_MOVIES)
             for (dir in dirs) {
                 var path = dir.path
-                var length = path.length - subdir.length
+                var length = path.length - subdir.length - 1
                 path = path.substring(0, length)
                 Log.v(TAG, "add path '$path' to driver dirs")
                 hashDirs.add(path)
@@ -32,6 +32,7 @@ class Storage {
                             if (file.name != "emulated" && file.isDirectory) {
                                 if (!hashDirs.contains(file.path)) {
                                     hashDirs.add(file.path)
+                                    Log.v(TAG, "add path '${file.path}' to driver dirs")
                                     driverDirs.add(file)
                                 }
                             }

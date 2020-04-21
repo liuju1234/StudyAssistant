@@ -6,8 +6,6 @@ import android.view.KeyEvent
 import android.view.KeyEvent.KEYCODE_BACK
 import android.webkit.WebSettings
 import android.webkit.WebView
-import com.liujk.study_assistant.utils.NetStatusUtil
-
 
 class MyWebView : WebView {
     constructor(context: Context?) : super(context) {}
@@ -32,6 +30,8 @@ class MyWebView : WebView {
         webSettings.setBuiltInZoomControls(true);
         //webSettings.setLoadWithOverviewMode(true)
         webSettings.setPluginState(WebSettings.PluginState.ON)
+        // webSetting.setPageCacheCapacity(IX5WebSettings.DEFAULT_CACHE_CAPACITY);
+        webSettings.setPluginState(WebSettings.PluginState.ON_DEMAND)
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE)
         webSettings.setAllowUniversalAccessFromFileURLs(true)
         webSettings.setLoadsImagesAutomatically(true)

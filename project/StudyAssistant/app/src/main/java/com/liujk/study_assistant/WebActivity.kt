@@ -18,7 +18,6 @@ import android.widget.FrameLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.liujk.study_assistant.view.MyWebView
 
-
 class WebActivity : AppCompatActivity() {
     lateinit var myWebView: MyWebView
     lateinit var fullScreenVideo: FrameLayout
@@ -31,6 +30,14 @@ class WebActivity : AppCompatActivity() {
         fullScreenVideo = findViewById(R.id.full_screen_video)
 
         myWebView.webViewClient = object : WebViewClient() {
+            override fun onRenderProcessGone(
+                view: WebView?,
+                detail: RenderProcessGoneDetail?
+            ): Boolean {
+                Log.v(TAG, "onRenderProcessGone")
+                return super.onRenderProcessGone(view, detail)
+            }
+
             override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
                 //使用WebView加载显示url
                 view.loadUrl(url)
@@ -46,8 +53,8 @@ class WebActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 Log.v(TAG, "onPageFinished($url)")
-                Log.v(TAG, "BrowserJsInject(${BrowserJsInject.fullScreenByJs(url?:"")})")
-                view?.loadUrl(BrowserJsInject.fullScreenByJs(url?:""))
+                //Log.v(TAG, "BrowserJsInject(${BrowserJsInject.fullScreenByJs(url?:"")})")
+                //view?.loadUrl(BrowserJsInject.fullScreenByJs(url?:""))
             }
 
             override fun onReceivedError(
@@ -72,6 +79,16 @@ class WebActivity : AppCompatActivity() {
         val thisWebActivity = this
         myWebView.webChromeClient = object : WebChromeClient() {
 
+            override fun getDefaultVideoPoster(): Bitmap? {
+                Log.v(TAG, "getDefaultVideoPoster")
+                return super.getDefaultVideoPoster()
+            }
+
+            override fun getVideoLoadingProgressView(): View? {
+                Log.v(TAG, "onShowCustomView")
+                return super.getVideoLoadingProgressView()
+            }
+
             var mCallback: CustomViewCallback? = null
             override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
                 Log.v(TAG, "onShowCustomView")
@@ -79,12 +96,13 @@ class WebActivity : AppCompatActivity() {
                 fullScreenVideo.setVisibility(View.VISIBLE)
                 fullScreenVideo.addView(view)
                 mCallback = callback
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE)
                 super.onShowCustomView(view, callback)
             }
 
             override fun onHideCustomView() {
                 Log.v(TAG, "onHideCustomView")
+                mCallback?.onCustomViewHidden()
                 myWebView.setVisibility(View.VISIBLE)
                 fullScreenVideo.setVisibility(View.GONE)
                 fullScreenVideo.removeAllViews()
@@ -96,7 +114,7 @@ class WebActivity : AppCompatActivity() {
                 result: JsResult?
             ): Boolean {
                 val builder = AlertDialog.Builder(thisWebActivity)
-                builder.setTitle("自定义alert事件")
+                builder.setTitle("来自：${url}")
                 builder.setMessage(message)
                 builder.show()
                 return super.onJsAlert(view, url, message, result)
