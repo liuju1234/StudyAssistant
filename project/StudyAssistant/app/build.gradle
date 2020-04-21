@@ -2,6 +2,28 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
+def appName = "StudyAssistant"
+
+def keystoreSignConfigs = [
+        ['keyset': 'testkey', 'storeFile': '../keystore/test_key', 'storePassword': 'android', 'keyAlias': 'test', 'keyPassword': 'android'],
+]
+
+def getBuildTool(String tool) {
+    def buildToolPath = android.getSdkDirectory().getAbsolutePath() + File.separatorChar + "build-tools"
+    buildToolPath = buildToolPath + File.separatorChar + android.getBuildToolsVersion()
+
+    def toolPath = buildToolPath + File.separatorChar + tool
+    if (!new File(toolPath).exists()) {
+        toolPath = toolPath + ".bat"
+    }
+
+    if (!new File(toolPath).exists()) {
+        throw new RuntimeException("Can not found build tool '$tool' in '$buildToolPath'")
+    }
+
+    return toolPath
+}
+
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
@@ -23,6 +45,78 @@ android {
         }
     }
 
+    def newDir = rootDir.getAbsolutePath() + File.separatorChar + "out"
+    def apkSignerPath = getBuildTool("apksigner")
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def suffix = "${buildType.name}-${defaultConfig.versionName}"
+
+            def oldPath = output.outputFile.getAbsolutePath()
+            def newName = "${appName}_${suffix}.apk"
+            def newPath = "${newDir}${File.separatorChar}${newName}"
+
+            build.doLast {
+                logger.error("copy apk:\n  ${oldPath}\n  -> ${newPath}")
+                copy {
+                    //copy file
+                    from oldPath
+                    into newDir
+                    rename { fileName ->
+                        fileName = newName
+                    }
+                }
+                if (variant.name.contains("Release") && variant.mappingFile != null) {
+                    def oldMappingPath = variant.mappingFile.parentFile.getAbsolutePath()
+                    def newMappingName = "mapping_${suffix}"
+                    def newMappingPath = "${newDir}${File.separatorChar}${newMappingName}"
+                    //logger.error("copy mapping:\n  ${oldMappingPath}\n  -> ${newMappingPath}")
+                    copy {
+                        // copy directory
+                        from oldMappingPath
+                        into newMappingPath
+                    }
+                }
+                logger.error("variant.name is:  ${variant.name}")
+                if (variant.name.toLowerCase().contains("release")) {
+                    def origPath = oldPath
+                    logger.error("sign apk:\n  ${origPath}")
+                    for (Map signConfig : keystoreSignConfigs) {
+                        def keySet = signConfig.get('keyset')
+                        def storeFile = signConfig.get('storeFile')
+                        def storePassword = signConfig.get('storePassword')
+                        def keyAlias = signConfig.get('keyAlias')
+                        def keyPassword = signConfig.get('keyPassword')
+                        def signOutDir = newDir + File.separatorChar + keySet
+                        File outDir = new File(signOutDir)
+                        if (!outDir.exists()) {
+                            outDir.mkdirs()
+                        }
+                        def signNewName = "${appName}_${suffix}_signed_${keySet}.apk"
+                        def signOutFile = signOutDir + File.separatorChar + signNewName
+                        exec {
+                            def myCommand = [
+                                    apkSignerPath, 'sign',
+                                    '--ks', storeFile, '--ks-pass', 'pass:' + storePassword,
+                                    '--ks-key-alias', keyAlias, '--key-pass', 'pass:' + keyPassword,
+                                    '--out', signOutFile, origPath,
+                            ]
+                            //logger.error("Run Command:" + myCommand.toString())
+                            logger.error("  ${keySet}  -> ${signOutFile}")
+                            commandLine myCommand
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}
+
+android {
+    lintOptions {
+        abortOnError false
+    }
 }
 
 dependencies {
