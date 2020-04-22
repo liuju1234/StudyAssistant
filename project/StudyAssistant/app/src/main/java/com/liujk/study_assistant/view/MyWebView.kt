@@ -36,8 +36,12 @@ class MyWebView : WebView {
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE)
         webSettings.setAllowUniversalAccessFromFileURLs(true)
         webSettings.setLoadsImagesAutomatically(true)
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
-            webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            }
+        } catch (e: Throwable) {
+            // ignore
         }
     }
 

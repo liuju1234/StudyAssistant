@@ -19,7 +19,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.liujk.study_assistant.view.MyWebView
 
-class WebActivity : AppCompatActivity() {
+class WebActivity : BaseActivity() {
     lateinit var myWebView: MyWebView
     lateinit var fullScreenVideo: FrameLayout
 

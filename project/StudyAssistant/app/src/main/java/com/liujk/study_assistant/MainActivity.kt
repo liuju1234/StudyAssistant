@@ -20,7 +20,37 @@ import com.liujk.study_assistant.view.MySmartTable
 const val TAG = "liujk_log"
 private const val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 100
 
-class MainActivity : AppCompatActivity() {
+abstract class BaseActivity: AppCompatActivity() {
+    var canFinish: Boolean = false
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        canFinish = true
+        activitySet.add(this)
+    }
+
+    override fun finish() {
+        super.finish()
+        canFinish = false
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        activitySet.remove(this)
+    }
+
+    companion object {
+        val activitySet = HashSet<BaseActivity>()
+        fun finishAll() {
+            for (activity in activitySet) {
+                if (activity.canFinish) {
+                    activity.finish()
+                }
+            }
+        }
+    }
+}
+
+class MainActivity : BaseActivity() {
     private lateinit var dataTable: MySmartTable<ProgressInfo>
     private lateinit var headerText: TextView
 
@@ -37,7 +67,8 @@ class MainActivity : AppCompatActivity() {
 
     fun displayInfo() {
         val displayMetrics = this.resources.displayMetrics
-        headerText.setText("density: ${displayMetrics.density} " +
+        headerText.setText("SDK Version: ${Build.VERSION.SDK_INT} " +
+                "density: ${displayMetrics.density} " +
                 "densityDpi: ${displayMetrics.densityDpi} " +
                 "xdpi: ${displayMetrics.xdpi} " +
                 "ydpi: ${displayMetrics.ydpi} " +

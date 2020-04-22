@@ -140,7 +140,7 @@ class MyAction(var type: ActionType, var param: String) {
         try {
             if (type == ActionType.URL) {
                 Toast.makeText(context, "即将访问地址：$param", Toast.LENGTH_SHORT).show()
-                if (true) {
+                if (false) {
                     val intent = Intent(Intent.ACTION_VIEW)
                     intent.data = Uri.parse(param)
                     context.startActivity(intent)
