@@ -15,6 +15,7 @@ import android.view.ViewGroup
 import android.view.Window
 import android.webkit.*
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.liujk.study_assistant.view.MyWebView
 
@@ -53,8 +54,6 @@ class WebActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 Log.v(TAG, "onPageFinished($url)")
-                //Log.v(TAG, "BrowserJsInject(${BrowserJsInject.fullScreenByJs(url?:"")})")
-                //view?.loadUrl(BrowserJsInject.fullScreenByJs(url?:""))
             }
 
             override fun onReceivedError(
@@ -154,49 +153,15 @@ class WebActivity : AppCompatActivity() {
     companion object{
         const val DATA_URL = "MY_DATA_URL"
         fun start(context: Context, urlStr: String) {
-            val intent = Intent(Intent.ACTION_MAIN)
-            intent.component = ComponentName(context.packageName, context.packageName + ".WebActivity")
-            intent.putExtra(DATA_URL, urlStr)
-            context.startActivity(intent)
+            try {
+                val intent = Intent(Intent.ACTION_MAIN)
+                intent.component =
+                    ComponentName(context.packageName, context.packageName + ".WebActivity")
+                intent.putExtra(DATA_URL, urlStr)
+                context.startActivity(intent)
+            } catch (e: Exception) {
+                Toast.makeText(context, "error:" + e.message, Toast.LENGTH_LONG).show()
+            }
         }
-    }
-}
-
-internal object BrowserJsInject {
-    /**
-     * Js注入
-     * @param url 加载的网页地址
-     * @return 注入的js内容，若不是需要适配的网址则返回空javascript
-     */
-    fun fullScreenByJs(url: String): String {
-        val refer = referParser(url)
-        return if (null != refer) {
-            val js3 = ("window.onload=function(){document.getElementsByClassName('"
-                    + referParser(url) + "')[0].addEventListener('click',function(){alert('120');" +
-                    "console.log();" +
-                    "alert('110');})}"
-                    + ";")
-            "javascript:$js3"
-        } else {
-            "javascript:"
-        }
-    }
-
-    /**
-     * 对不同的视频网站分析相应的全屏控件
-     * @param url 加载的网页地址
-     * @return 相应网站全屏按钮的class标识
-     */
-    fun referParser(url: String): String? {
-        if (url.contains("letv")) {
-            return "hv_ico_screen" //乐视Tv
-        } else if (url.contains("youku")) {
-            return "x-zoomin" //优酷
-        } else if (url.contains("bilibili")) {
-            return "icon-widescreen" //bilibili
-        } else if (url.contains("qq")) {
-            return "tvp_fullscreen_button" //腾讯视频
-        }
-        return null
     }
 }

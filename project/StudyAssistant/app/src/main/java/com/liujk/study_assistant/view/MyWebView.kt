@@ -30,7 +30,7 @@ class MyWebView : WebView {
         webSettings.setUseWideViewPort(true)
         webSettings.setBuiltInZoomControls(true);
         //webSettings.setLoadWithOverviewMode(true)
-        webSettings.setPluginState(WebSettings.PluginState.ON)
+        //webSettings.setPluginState(WebSettings.PluginState.ON)
         // webSetting.setPageCacheCapacity(IX5WebSettings.DEFAULT_CACHE_CAPACITY);
         webSettings.setPluginState(WebSettings.PluginState.ON_DEMAND)
         webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE)
