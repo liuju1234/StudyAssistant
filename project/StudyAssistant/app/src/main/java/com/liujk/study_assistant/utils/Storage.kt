@@ -71,6 +71,15 @@ class Storage {
             return cur.path
         }
 
+        fun readStringFromFile(dir: File, fileName: String = ""): String {
+            val stringList = readLinesFromFile(dir, fileName)
+            var fileStr = ""
+            for (str in stringList) {
+                fileStr += str + "\n"
+            }
+            return fileStr.trim()
+        }
+
         fun readLinesFromFile(dir: File, fileName: String = ""): List<String> {
             var file: File = dir
             if (fileName != "") {

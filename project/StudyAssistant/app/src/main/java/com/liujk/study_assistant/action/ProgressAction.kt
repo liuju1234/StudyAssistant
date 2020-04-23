@@ -34,6 +34,8 @@ class ProgressAction(var content: ProcessContent, var day: Int) {
     val ROOT_DIR = "网课"
     var status: RunStatus = RunStatus.IDLE
     var dirsMap: HashMap<Context, List<String>> = hashMapOf()
+    private var actions:ArrayList<MyAction> = arrayListOf()
+    private var note = ""
 
     private fun getPaths(): List<String> {
         val paths = arrayListOf<String>()
@@ -51,8 +53,9 @@ class ProgressAction(var content: ProcessContent, var day: Int) {
         return dirsMap[context] ?: Storage.findForDir(context, ROOT_DIR).also { dirsMap[context] = it }
     }
 
-    private fun getActions(context: Context): List<MyAction> {
-        val actions:ArrayList<MyAction> = arrayListOf()
+    private fun getActions(context: Context) {
+        actions = arrayListOf()
+        note = ""
 
         val rootDirs = getRootDirs(context)
         for (rootDir in rootDirs) {
@@ -63,6 +66,14 @@ class ProgressAction(var content: ProcessContent, var day: Int) {
                     if (fileNames != null) {
                         for (fileName in fileNames) {
                             when {
+                                fileName == "note.txt" -> {
+                                    Log.v(
+                                        TAG,
+                                        "add URL Action from '${Storage.buildPath(dir.path, fileName)}'"
+                                    )
+                                    if (note != "") note += "\n"
+                                    note += Storage.readStringFromFile(dir, fileName)
+                                }
                                 fileName == "url.txt" -> {
                                     Log.v(
                                         TAG,
@@ -99,7 +110,6 @@ class ProgressAction(var content: ProcessContent, var day: Int) {
             }
         }
 
-        return actions
     }
 
     private fun addMultiActions(actions:ArrayList<MyAction>, type: ActionType, file: File) {
@@ -119,11 +129,11 @@ class ProgressAction(var content: ProcessContent, var day: Int) {
     }
 
     fun run(context: Context, view: View) {
-        val actions = getActions(context)
-        if (actions.lastIndex > 0) {
-            ActionList(context, actions).select()
-        } else if (actions.lastIndex == 0) {
+        getActions(context)
+        if (actions.lastIndex == 0 && note == "") {
             actions[0].run(context)
+        } else {
+            ActionList(context, actions).display(note)
         }
     }
 }

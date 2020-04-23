@@ -2,24 +2,29 @@ package com.liujk.study_assistant.view
 
 import android.app.AlertDialog
 import android.content.Context
-import android.content.DialogInterface
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ListView
-import android.widget.PopupWindow
 import android.widget.TextView
 import com.liujk.study_assistant.R
 import com.liujk.study_assistant.action.MyAction
-import com.liujk.study_assistant.utils.DensityUtils
 
 class ActionList(var context: Context, var actions: List<MyAction>) {
-    val resources = context.resources
-    val itemsCount = actions.size
-    fun select() {
-        val builder: AlertDialog.Builder = AlertDialog.Builder(context).
-            setAdapter(ActionListAdapter(context, actions), null)
+    fun display(noteText: String) {
+        val actionsLayout = LayoutInflater.from(context).inflate(R.layout.action_list, null)
+        val noteView: TextView = actionsLayout.findViewById(R.id.action_note)
+        if (noteText == "") {
+            noteView.visibility = View.GONE
+        } else {
+            noteView.visibility = View.VISIBLE
+            noteView.text = noteText
+        }
+        val listView: ListView = actionsLayout.findViewById(R.id.list_view)
+        listView.adapter = ActionListAdapter(context, actions)
+        val builder: AlertDialog.Builder = AlertDialog.Builder(context)
+            .setView(actionsLayout)
         builder.create().show()
     }
 }
