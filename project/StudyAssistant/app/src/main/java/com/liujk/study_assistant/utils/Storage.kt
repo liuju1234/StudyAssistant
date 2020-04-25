@@ -106,6 +106,7 @@ class Storage {
 
         fun isVideo(fileName: String): Boolean {
             return fileName.endsWith(".mp4") ||
+                    fileName.endsWith(".avi") ||
                     fileName.endsWith(".rmvb") ||
                     fileName.endsWith(".flv")
         }

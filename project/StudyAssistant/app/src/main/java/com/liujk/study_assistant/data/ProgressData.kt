@@ -52,17 +52,19 @@ const val STR_QITA = "其它"
 val QITA = ProcessContent(STR_QITA, ProgressType.CLASS)
 
 val weekDays = arrayListOf<WeekDayInfo>(
-    WeekDayInfo("星期一", "monday", listOf("周一", "Mon")),
-    WeekDayInfo("星期二", "tuesday", listOf("周二", "Tus")),
-    WeekDayInfo("星期三", "wednesday", listOf("周三", "Wed")),
-    WeekDayInfo("星期四", "thursday", listOf("周四", "Thu")),
-    WeekDayInfo("星期五", "friday", listOf("周五", "Fri"))
+    WeekDayInfo("星期日", "sunday", listOf("周日", "Sun"), true, 0),
+    WeekDayInfo("星期一", "monday", listOf("周一", "Mon"), true, 1),
+    WeekDayInfo("星期二", "tuesday", listOf("周二", "Tus"), true,2),
+    WeekDayInfo("星期三", "wednesday", listOf("周三", "Wed"), true, 3),
+    WeekDayInfo("星期四", "thursday", listOf("周四", "Thu"), true, 4),
+    WeekDayInfo("星期五", "friday", listOf("周五", "Fri"), false,0),
+    WeekDayInfo("星期六", "saturday", listOf("周六", "Sat"), false, 0)
 )
 
-class WeekDayInfo(val display: String, val field: String, initPaths: List<String>) {
+class WeekDayInfo(val displayStr: String, val field: String, initPaths: List<String>, val display: Boolean, val displayIdx: Int) {
     var paths: ArrayList<String> = arrayListOf()
     init {
-        paths.add(display)
+        paths.add(displayStr)
         paths.add(field)
         for(path in initPaths) {
             paths.add(path)
@@ -101,7 +103,9 @@ class ProgressData(val context: Context, dataTable: MySmartTable<ProgressInfo>) 
     init {
         columnList.add(Column<Any>("时间", "time"))
         for (weekDay in weekDays) {
-            columnList.add(Column<Any>(weekDay.display, weekDay.field))
+            if (weekDay.display) {
+                columnList.add(Column<Any>(weekDay.displayStr, weekDay.field))
+            }
         }
 
         for (oneColumn in columnList) {
@@ -188,13 +192,13 @@ class ItemProgress(private var progressInfo: ProgressInfo, var time: ItemTime,
     var prepareNotify: ProcessNotify? = null
     var notify: ProcessNotify? = null
     val type: ProgressType = content.type
-    var daysInfo: String = weekDays[index].display
+    var daysInfo: String = weekDays[index].displayStr
     var tittle: String = content.name
 
     init {
         if (range > 0) {
             daysInfo += "~"
-            daysInfo += weekDays[index + range].display
+            daysInfo += weekDays[index + range].displayStr
         }
         if (type == ProgressType.CLASS) {
             prepareNotify = ProcessNotify()
@@ -214,28 +218,35 @@ class ProgressInfo(begin: MyTime, duration: MyDuration, private var contentArray
 
     var cellRowRange:RowRange?
     var time:ItemTime = ItemTime(this, begin, duration)
-    private var monday:ItemProgress
+    private var sunday: ItemProgress
+    private var monday: ItemProgress
     private var tuesday: ItemProgress
     private var wednesday: ItemProgress
     private var thursday: ItemProgress
     private var friday: ItemProgress
+    private var saturday: ItemProgress
 
     init {
         val tittleEndI = contentArray.lastIndex
         val weekItemArray: ArrayList<ItemProgress> = arrayListOf()
         var lastItem = ItemProgress(this, time, 0, 0, contentArray[0])
         weekItemArray.add(0, lastItem)
-        for (i in 1..5) {
+        for (i in 1..4) {
             val content = if (tittleEndI >= i) contentArray[i] else null
             val range = if (tittleEndI < 4 && tittleEndI == i) 4 - tittleEndI else 0
             lastItem = if (content != null) ItemProgress(this, time, i, range, content) else lastItem
             weekItemArray.add(i, lastItem)
         }
-        monday = weekItemArray[0]
-        tuesday = weekItemArray[1]
-        wednesday = weekItemArray[2]
-        thursday = weekItemArray[3]
-        friday = weekItemArray[4]
+        val currentProcess: (Int) -> ItemProgress = { index: Int ->
+            if (weekDays[index].display) weekItemArray[weekDays[index].displayIdx] else lastItem
+        }
+        sunday = currentProcess(0)
+        monday = currentProcess(1)
+        tuesday = currentProcess(2)
+        wednesday = currentProcess(3)
+        thursday = currentProcess(4)
+        friday = currentProcess(5)
+        saturday = currentProcess(6)
 
         if (tittleEndI < 4) {
             cellRowRange = RowRange(this.contentArray.lastIndex + 1, 5)

@@ -130,10 +130,12 @@ class ProgressAction(var content: ProcessContent, var day: Int) {
 
     fun run(context: Context, view: View) {
         getActions(context)
-        if (actions.lastIndex == 0 && note == "") {
-            actions[0].run(context)
-        } else {
-            ActionList(context, actions).display(note)
+        if (actions.size > 0) {
+            if (actions.size == 1 && note == "") {
+                actions[0].run(context)
+            } else {
+                ActionList(context, actions).display(note)
+            }
         }
     }
 }
