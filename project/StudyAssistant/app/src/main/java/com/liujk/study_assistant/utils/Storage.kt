@@ -10,14 +10,14 @@ import java.lang.Exception
 class Storage {
     companion object {
         fun getDriverDirs(context: Context): ArrayList<File> {
-            var hashDirs: HashSet<String> = hashSetOf()
-            var driverDirs: ArrayList<File> = arrayListOf()
+            val hashDirs: HashSet<String> = hashSetOf()
+            val driverDirs: ArrayList<File> = arrayListOf()
             val subdir = buildPath( "Android", "data", context.packageName, "files",
                 Environment.DIRECTORY_MOVIES)
             val dirs = context.getExternalFilesDirs(Environment.DIRECTORY_MOVIES)
             for (dir in dirs) {
                 var path = dir.path
-                var length = path.length - subdir.length - 1
+                val length = path.length - subdir.length - 1
                 path = path.substring(0, length)
                 Log.v(TAG, "add path '$path' to driver dirs")
                 hashDirs.add(path)
@@ -45,28 +45,41 @@ class Storage {
             return driverDirs
         }
 
-        fun findForDir(context: Context, rootDir: String): List<String> {
-            var rootDirs: ArrayList<String> = arrayListOf()
+        fun findForDir(context: Context, rootDir: String): List<File> {
+            val rootDirs: ArrayList<File> = arrayListOf()
 
             for (driverDir in getDriverDirs(context)) {
                 val file = File(driverDir, rootDir)
                 if (file.isDirectory) {
                     Log.v(TAG, "add path '${file.path}' to root dirs")
-                    rootDirs.add(file.path)
+                    rootDirs.add(file)
                 }
             }
 
             return rootDirs
         }
 
+        fun findDirsByNames(dir: File, names:List<String>): List<File> {
+            val resDirs = arrayListOf<File>()
+            if (dir.isDirectory) {
+                val fileList = dir.listFiles()
+                if (fileList != null) {
+                    for (subPath in fileList) {
+                        for (name in names) {
+                            if (subPath.path.contains(name, true)) {
+                                resDirs.add(subPath)
+                            }
+                        }
+                    }
+                }
+            }
+            return resDirs
+        }
+
         fun buildPath(base: String, vararg segments: String) : String {
             var cur:File = File(base)
             for (segment in segments) {
-                if (cur == null) {
-                    cur = File(segment)
-                } else {
-                    cur = File(cur, segment);
-                }
+                cur = File(cur, segment);
             }
             return cur.path
         }
@@ -86,7 +99,7 @@ class Storage {
                 file = File(dir, fileName)
             }
 
-            var lines: ArrayList<String> = arrayListOf()
+            val lines: ArrayList<String> = arrayListOf()
             try {
                 val inputStream: InputStream = FileInputStream(file)
                 val inputReader = InputStreamReader(inputStream)

@@ -33,83 +33,73 @@ enum class RunStatus {
 class ProgressAction(var content: ProcessContent, var day: Int) {
     val ROOT_DIR = "网课"
     var status: RunStatus = RunStatus.IDLE
-    var dirsMap: HashMap<Context, List<String>> = hashMapOf()
     private var actions:ArrayList<MyAction> = arrayListOf()
     private var note = ""
 
-    private fun getPaths(): List<String> {
-        val paths = arrayListOf<String>()
-        if (content.times == ActionTimes.DAY) {
-            for (path in weekDays[day].paths) {
-                paths.add(Storage.buildPath(content.name, path))
+    private fun findActionsFromOneDir(dir: File) {
+        if (dir.isDirectory) {
+            val fileNames = dir.list()
+            if (fileNames != null) {
+                for (fileName in fileNames) {
+                    when {
+                        fileName == "note.txt" -> {
+                            Log.v(
+                                TAG,
+                                "add URL Action from '${Storage.buildPath(dir.path, fileName)}'"
+                            )
+                            if (note != "") note += "\n"
+                            note += Storage.readStringFromFile(dir, fileName)
+                        }
+                        fileName == "url.txt" -> {
+                            Log.v(
+                                TAG,
+                                "add URL Action from '${Storage.buildPath(dir.path, fileName)}'"
+                            )
+                            addMultiActions(actions, ActionType.URL, File(dir, fileName))
+                        }
+                        fileName == "app.txt" -> {
+                            Log.v(
+                                TAG,
+                                "add APP Action from '${Storage.buildPath(dir.path, fileName)}'"
+                            )
+                            addMultiActions(actions, ActionType.APP, File(dir, fileName))
+                        }
+                        Storage.isVideo(fileName) -> {
+                            Log.v(
+                                TAG,
+                                "add VIDEO Action for '${Storage.buildPath(
+                                    dir.path,
+                                    fileName
+                                )}'"
+                            )
+                            actions.add(
+                                MyAction(
+                                    ActionType.VIDEO,
+                                    Storage.buildPath(dir.path, fileName)
+                                )
+                            )
+                        }
+                    }
+                }
             }
-        } else
-            paths.add(content.name)
-
-        return paths
-    }
-
-    private fun getRootDirs(context: Context): List<String> {
-        return dirsMap[context] ?: Storage.findForDir(context, ROOT_DIR).also { dirsMap[context] = it }
+        }
     }
 
     private fun getActions(context: Context) {
         actions = arrayListOf()
         note = ""
 
-        val rootDirs = getRootDirs(context)
+        val rootDirs = Storage.findForDir(context, ROOT_DIR)
         for (rootDir in rootDirs) {
-            for (path in getPaths()) {
-                val dir = File(rootDir, path)
-                if (dir.isDirectory) {
-                    val fileNames = dir.list()
-                    if (fileNames != null) {
-                        for (fileName in fileNames) {
-                            when {
-                                fileName == "note.txt" -> {
-                                    Log.v(
-                                        TAG,
-                                        "add URL Action from '${Storage.buildPath(dir.path, fileName)}'"
-                                    )
-                                    if (note != "") note += "\n"
-                                    note += Storage.readStringFromFile(dir, fileName)
-                                }
-                                fileName == "url.txt" -> {
-                                    Log.v(
-                                        TAG,
-                                        "add URL Action from '${Storage.buildPath(dir.path, fileName)}'"
-                                    )
-                                    addMultiActions(actions, ActionType.URL, File(dir, fileName))
-                                }
-                                fileName == "app.txt" -> {
-                                    Log.v(
-                                        TAG,
-                                        "add APP Action from '${Storage.buildPath(dir.path, fileName)}'"
-                                    )
-                                    addMultiActions(actions, ActionType.APP, File(dir, fileName))
-                                }
-                                Storage.isVideo(fileName) -> {
-                                    Log.v(
-                                        TAG,
-                                        "add VIDEO Action for '${Storage.buildPath(
-                                            dir.path,
-                                            fileName
-                                        )}'"
-                                    )
-                                    actions.add(
-                                        MyAction(
-                                            ActionType.VIDEO,
-                                            Storage.buildPath(dir.path, fileName)
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
+            val processRoots = Storage.findDirsByNames(rootDir, content.names)
+            for (processRoot in processRoots) {
+                findActionsFromOneDir(processRoot)
+                val processDayDirs = Storage.findDirsByNames(processRoot, weekDays[day].alias)
+                for (processDayDir in processDayDirs) {
+                    findActionsFromOneDir(processDayDir)
                 }
             }
         }
-
     }
 
     private fun addMultiActions(actions:ArrayList<MyAction>, type: ActionType, file: File) {

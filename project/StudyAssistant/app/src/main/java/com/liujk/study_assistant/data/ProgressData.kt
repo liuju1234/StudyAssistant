@@ -16,11 +16,11 @@ val MILLIS_HOURE: Long = 60 * MILLIS_MINUTE
 val MILLIS_DAY: Long = 24 * MILLIS_HOURE
 
 const val STR_YU_WEN = "语文"
-val YU_WEN = ProcessContent(STR_YU_WEN, ProgressType.CLASS, ActionTimes.DAY)
+val YU_WEN = ProcessContent(STR_YU_WEN, ProgressType.CLASS)
 const val STR_SHU_XUE = "数学"
-val SHU_XUE = ProcessContent(STR_SHU_XUE, ProgressType.CLASS, ActionTimes.DAY)
+val SHU_XUE = ProcessContent(STR_SHU_XUE, ProgressType.CLASS)
 const val STR_ENGLISH = "英语"
-val ENGLISH = ProcessContent(STR_ENGLISH, ProgressType.CLASS, ActionTimes.DAY)
+val ENGLISH = ProcessContent(STR_ENGLISH, ProgressType.CLASS)
 const val STR_MEETING = "班会"
 val MEETING = ProcessContent(STR_MEETING, ProgressType.CLASS)
 const val STR_EYE = "眼保健操"
@@ -43,9 +43,9 @@ val NOON = ProcessContent(STR_NOON, ProgressType.REST, info=INFO_NOON)
 const val STR_MEISHU = "美术"
 val MEISHU = ProcessContent(STR_MEISHU, ProgressType.CLASS)
 const val STR_KEXUE = "科学"
-val KEXUE = ProcessContent(STR_KEXUE, ProgressType.CLASS)
+val KEXUE = ProcessContent(STR_KEXUE, ProgressType.CLASS, alias = "科技")
 const val STR_DAOFA = "道法"
-val DAOFA = ProcessContent(STR_DAOFA, ProgressType.CLASS)
+val DAOFA = ProcessContent(STR_DAOFA, ProgressType.CLASS, alias = "道德法制")
 const val STR_MUSIC = "音乐"
 val MUSIC = ProcessContent(STR_MUSIC, ProgressType.CLASS)
 const val STR_QITA = "其它"
@@ -61,13 +61,13 @@ val weekDays = arrayListOf<WeekDayInfo>(
     WeekDayInfo("星期六", "saturday", listOf("周六", "Sat"), false, 0)
 )
 
-class WeekDayInfo(val displayStr: String, val field: String, initPaths: List<String>, val display: Boolean, val displayIdx: Int) {
-    var paths: ArrayList<String> = arrayListOf()
+class WeekDayInfo(val displayStr: String, val field: String, initAlias: List<String>, val display: Boolean, val displayIdx: Int) {
+    var alias: ArrayList<String> = arrayListOf()
     init {
-        paths.add(displayStr)
-        paths.add(field)
-        for(path in initPaths) {
-            paths.add(path)
+        alias.add(displayStr)
+        alias.add(field)
+        for(path in initAlias) {
+            alias.add(path)
         }
     }
 }
@@ -148,9 +148,7 @@ class ProgressData(val context: Context, dataTable: MySmartTable<ProgressInfo>) 
     }
 }
 
-class RowRange(firstCol: Int, lastCol: Int) {
-    var firstCol = firstCol
-    var lastCol = lastCol
+class RowRange(private val firstCol: Int, private val lastCol: Int) {
     fun toCellRange(row: Int): CellRange {
         return CellRange(row, row, firstCol, lastCol)
     }
@@ -160,9 +158,17 @@ enum class ProgressType{
     CLASS, REST, ACTION
 }
 
-class ProcessContent(var name: String, var type:ProgressType,
-                     var times: ActionTimes = ActionTimes.WEEK,
-                     var info: String? = null) {
+class ProcessContent(val name: String, val type:ProgressType,
+                     private val alias: String? = null,
+                     val info: String? = null) {
+    val names = arrayListOf<String>()
+
+    init {
+        names.add(name)
+        if (alias != null) {
+            names.add(alias)
+        }
+    }
 
     override fun toString(): String {
         return name + if (info != null) info else ""
