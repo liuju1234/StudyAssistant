@@ -1,16 +1,18 @@
 package com.liujk.study_assistant
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.Settings;
 import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.liujk.study_assistant.data.ProgressData
@@ -53,6 +55,7 @@ abstract class BaseActivity: AppCompatActivity() {
 class MainActivity : BaseActivity() {
     private lateinit var dataTable: MySmartTable<ProgressInfo>
     private lateinit var headerText: TextView
+    private lateinit var buttonCast: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,6 +64,16 @@ class MainActivity : BaseActivity() {
         setContentView(R.layout.activity_main)
         dataTable = findViewById(R.id.data_table)
         headerText = findViewById(R.id.header_text)
+
+        buttonCast = findViewById(R.id.button_cast)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            buttonCast.setOnClickListener {
+                val intent = Intent(Settings.ACTION_CAST_SETTINGS)
+                startActivity(intent)
+            }
+        } else {
+            buttonCast.visibility = View.GONE
+        }
         grantPermission()
         //displayInfo()
     }
