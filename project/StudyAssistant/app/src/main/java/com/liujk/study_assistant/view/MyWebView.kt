@@ -27,7 +27,7 @@ class MyWebView : WebView {
         webSettings.setDatabaseEnabled(true)
         webSettings.setAllowFileAccess(true)
         webSettings.setSupportZoom(true)
-        webSettings.setUseWideViewPort(true)
+        //webSettings.setUseWideViewPort(true)
         webSettings.setBuiltInZoomControls(true);
         //webSettings.setLoadWithOverviewMode(true)
         //webSettings.setPluginState(WebSettings.PluginState.ON)

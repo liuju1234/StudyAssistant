@@ -14,12 +14,16 @@ import com.liujk.study_assistant.action.MyAction
 class ActionList(var context: Context, var actions: List<MyAction>) {
     fun display(noteText: String) {
         val actionsLayout = LayoutInflater.from(context).inflate(R.layout.action_list, null)
+        val noteAreaView: View = actionsLayout.findViewById(R.id.action_note_area)
         val noteView: TextView = actionsLayout.findViewById(R.id.action_note)
         if (noteText == "") {
-            noteView.visibility = View.GONE
+            noteAreaView.visibility = View.GONE
         } else {
-            noteView.visibility = View.VISIBLE
+            noteAreaView.visibility = View.VISIBLE
             noteView.text = noteText
+            if (actions.isEmpty()) {
+                actionsLayout.findViewById<View>(R.id.divider_line).visibility = View.GONE
+            }
         }
         val listView: ListView = actionsLayout.findViewById(R.id.list_view)
         listView.adapter = ActionListAdapter(context, actions)
@@ -35,9 +39,9 @@ class ActionListAdapter(var context: Context, var actions: List<MyAction>) : Bas
         val action = actions[position]
         val itemType = itemView.findViewById<TextView>(R.id.type)
         val itemContent = itemView.findViewById<TextView>(R.id.content)
-        itemType.setText(action.type.toString())
-        itemContent.setText(action.display)
-        itemView.setOnClickListener(View.OnClickListener { action.run(context) })
+        itemType.text = action.type.toString()
+        itemContent.text = action.display
+        itemView.setOnClickListener { action.run(context) }
         return itemView
     }
 

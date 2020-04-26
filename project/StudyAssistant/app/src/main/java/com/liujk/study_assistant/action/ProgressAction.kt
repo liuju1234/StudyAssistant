@@ -45,7 +45,7 @@ class ProgressAction(var content: ProcessContent, var day: Int) {
                         fileName == "note.txt" -> {
                             Log.v(
                                 TAG,
-                                "add URL Action from '${Storage.buildPath(dir.path, fileName)}'"
+                                "add note from '${Storage.buildPath(dir.path, fileName)}'"
                             )
                             if (note != "") note += "\n"
                             note += Storage.readStringFromFile(dir, fileName)
@@ -120,7 +120,7 @@ class ProgressAction(var content: ProcessContent, var day: Int) {
 
     fun run(context: Context, view: View) {
         getActions(context)
-        if (actions.size > 0) {
+        if (actions.size > 0 || note != "") {
             if (actions.size == 1 && note == "") {
                 actions[0].run(context)
             } else {

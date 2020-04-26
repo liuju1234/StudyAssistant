@@ -17,7 +17,6 @@ class MySmartTable<T> : SmartTable<T> {
     }
 
     init {
-        val resources = context.resources
         config.isShowTableTitle = true
         config.horizontalPadding = resources.getDimensionPixelSize(R.dimen.table_h_padding)
         config.isShowXSequence = false
@@ -50,11 +49,11 @@ class MySmartTable<T> : SmartTable<T> {
         var sizeWidth = MeasureSpec.getSize(widthMeasureSpec)
         var sizeHeight = MeasureSpec.getSize(heightMeasureSpec)
         if (modeWidth == MeasureSpec.AT_MOST) { // wrap_content
-            sizeWidth -= 300
+            sizeWidth -= resources.getDimensionPixelSize(R.dimen.table_left_padding)
             modeWidth = MeasureSpec.EXACTLY
         }
         if (modeHeight == MeasureSpec.AT_MOST) { // wrap_content
-            sizeHeight -= 100
+            sizeHeight -= resources.getDimensionPixelSize(R.dimen.table_bottom_padding)
             modeHeight = MeasureSpec.EXACTLY
         }
         super.onMeasure(MeasureSpec.makeMeasureSpec(sizeWidth, modeWidth),

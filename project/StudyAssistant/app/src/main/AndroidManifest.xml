@@ -18,8 +18,10 @@
         android:theme="@style/AppTheme"
         tools:targetApi="m">
         <activity android:name=".MainActivity"
+            android:screenOrientation="sensorLandscape"
             android:theme="@style/MyFullScreenTheme"
-            android:configChanges="keyboardHidden|orientation|screenSize">
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            tools:ignore="LockedOrientationActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
