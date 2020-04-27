@@ -6,7 +6,6 @@ import com.bin.david.form.data.CellRange
 import com.bin.david.form.data.Column
 import com.bin.david.form.data.table.TableData
 import com.liujk.study_assistant.TAG
-import com.liujk.study_assistant.action.ActionTimes
 import com.liujk.study_assistant.action.ProcessNotify
 import com.liujk.study_assistant.action.ProgressAction
 import com.liujk.study_assistant.view.MySmartTable
@@ -52,16 +51,16 @@ const val STR_QITA = "其它"
 val QITA = ProcessContent(STR_QITA, ProgressType.CLASS)
 
 val weekDays = arrayListOf<WeekDayInfo>(
-    WeekDayInfo("星期日", "sunday", listOf("周日", "Sun"), true, 0),
-    WeekDayInfo("星期一", "monday", listOf("周一", "Mon"), true, 1),
-    WeekDayInfo("星期二", "tuesday", listOf("周二", "Tus"), true,2),
-    WeekDayInfo("星期三", "wednesday", listOf("周三", "Wed"), true, 3),
-    WeekDayInfo("星期四", "thursday", listOf("周四", "Thu"), true, 4),
-    WeekDayInfo("星期五", "friday", listOf("周五", "Fri"), false,0),
-    WeekDayInfo("星期六", "saturday", listOf("周六", "Sat"), false, 0)
+    WeekDayInfo("星期日", "sunday", listOf("周日", "Sun"), true, 6),
+    WeekDayInfo("星期一", "monday", listOf("周一", "Mon"), true, 0),
+    WeekDayInfo("星期二", "tuesday", listOf("周二", "Tus"), true,1),
+    WeekDayInfo("星期三", "wednesday", listOf("周三", "Wed"), true, 2),
+    WeekDayInfo("星期四", "thursday", listOf("周四", "Thu"), true, 3),
+    WeekDayInfo("星期五", "friday", listOf("周五", "Fri"), false,4),
+    WeekDayInfo("星期六", "saturday", listOf("周六", "Sat"), false, 5)
 )
 
-class WeekDayInfo(val displayStr: String, val field: String, initAlias: List<String>, val display: Boolean, val displayIdx: Int) {
+class WeekDayInfo(val displayStr: String, val field: String, initAlias: List<String>, val display: Boolean, val dataIdx: Int) {
     var alias: ArrayList<String> = arrayListOf()
     init {
         alias.add(displayStr)
@@ -77,25 +76,25 @@ class ProgressData(val context: Context, dataTable: MySmartTable<ProgressInfo>) 
 
     val initProgresses = arrayListOf<ProgressInfo>(
         ProgressInfo(MyTime(8), MyDuration(25),
-            arrayOf<ProcessContent>(YU_WEN, SHU_XUE, YU_WEN, SHU_XUE, YU_WEN)),
+            arrayOf<ProcessContent>(SHU_XUE)),
         ProgressInfo(MyTime(8,25), MyDuration(5),
-            arrayOf<ProcessContent>(EYE)),
+            arrayOf<ProcessContent>(EYE), true),
         ProgressInfo(MyTime(8,30), MyDuration(30),
-            arrayOf<ProcessContent>(GUO_QI, BIG_PLAY)),
+            arrayOf<ProcessContent>(GUO_QI, BIG_PLAY), true),
         ProgressInfo(MyTime(9), MyDuration(25),
-            arrayOf<ProcessContent>(SHU_XUE, YU_WEN, SHU_XUE, YU_WEN, SHU_XUE)),
+            arrayOf<ProcessContent>(YU_WEN)),
         ProgressInfo(MyTime(9,25), MyDuration(5),
-            arrayOf<ProcessContent>(EYE)),
+            arrayOf<ProcessContent>(EYE), true),
         ProgressInfo(MyTime(9,30), MyDuration(30),
-            arrayOf<ProcessContent>(TI_YU)),
+            arrayOf<ProcessContent>(TI_YU), true),
         ProgressInfo(MyTime(10), MyDuration(25),
-            arrayOf<ProcessContent>(ENGLISH, ENGLISH, ENGLISH, ENGLISH, MEETING)),
+            arrayOf<ProcessContent>(ENGLISH, ENGLISH, ENGLISH, ENGLISH, MEETING, ENGLISH)),
         ProgressInfo(MyTime(10,25), MyDuration(5),
-            arrayOf<ProcessContent>(EYE)),
+            arrayOf<ProcessContent>(EYE), true),
         ProgressInfo(MyTime(10,30), MyDuration(60),
-            arrayOf<ProcessContent>(ARRANGE)),
+            arrayOf<ProcessContent>(ARRANGE), true),
         ProgressInfo(MyTime(11,30), MyDuration(150),
-            arrayOf<ProcessContent>(NOON)),
+            arrayOf<ProcessContent>(NOON), true),
         ProgressInfo(MyTime(14), MyDuration(90),
             arrayOf<ProcessContent>(MEISHU, KEXUE, DAOFA, MUSIC, QITA))
     )
@@ -124,16 +123,11 @@ class ProgressData(val context: Context, dataTable: MySmartTable<ProgressInfo>) 
         val tableData = TableData("课程表", initProgresses, columnList)
         val ranges: ArrayList<CellRange> = arrayListOf()
         for (index in 0..initProgresses.lastIndex) {
-            val classInfo = initProgresses[index]
-            val cellRange: CellRange? = classInfo.cellRowRange?.toCellRange(index)
-            if (cellRange != null) {
-                Log.v(TAG, "cellRange[ $index ] is ${cellRange.firstRow} ${cellRange.firstCol} ${cellRange.lastCol}")
-                ranges.add(cellRange)
-            } else {
-                Log.v(TAG, "cellRange[ $index ] is null")
+            for (cellRowRange in initProgresses[index].cellRowRanges) {
+                ranges.add(cellRowRange.toCellRange(index))
             }
         }
-        if (ranges.lastIndex >= 0) {
+        if (ranges.size > 0) {
             tableData.userCellRange = ranges
         }
         //tableData.sortColumn = columnList[0]
@@ -143,7 +137,24 @@ class ProgressData(val context: Context, dataTable: MySmartTable<ProgressInfo>) 
     companion object {
         var dataMap: HashMap<Context, ProgressData> = hashMapOf()
         fun getInstance(context: Context, dataTable: MySmartTable<ProgressInfo>) : ProgressData {
-            return dataMap.get(context) ?: ProgressData(context, dataTable).also { dataMap.put(context, it) }
+            return dataMap[context] ?: ProgressData(context, dataTable).also { dataMap[context] = it }
+        }
+
+        val displayDataIndexArray: ArrayList<Int> = arrayListOf()
+        val displayDayIndexArray: ArrayList<Int> = arrayListOf()
+        val dayIndexArray: Array<Int> = Array(weekDays.size) {0}
+        val data2displayIndexArray: Array<Int> = Array(weekDays.size) {0}
+
+        init {
+            var displayIndex = 0
+            for ((index, weekDay) in weekDays.withIndex()) {
+                if (weekDay.display) {
+                    displayDataIndexArray.add(weekDay.dataIdx)
+                    displayDayIndexArray.add(index)
+                    data2displayIndexArray[weekDay.dataIdx] = displayIndex++
+                }
+                dayIndexArray[weekDay.dataIdx] = index
+            }
         }
     }
 }
@@ -193,19 +204,26 @@ class ItemTime(private var progressInfo: ProgressInfo,
 }
 
 class ItemProgress(private var progressInfo: ProgressInfo, var time: ItemTime,
-                   var index: Int, private var range: Int, var content: ProcessContent) : MyItem {
-    var action: ProgressAction = ProgressAction(content, index)
+                   private val dataIndex: Int, range: Int, var content: ProcessContent) : MyItem {
+    private val dayIndex = ProgressData.dayIndexArray[dataIndex]
+    var action: ProgressAction = ProgressAction(content, dayIndex)
     var prepareNotify: ProcessNotify? = null
     var notify: ProcessNotify? = null
     val type: ProgressType = content.type
-    var daysInfo: String = weekDays[index].displayStr
+    var daysInfo: String = weekDays[dayIndex].displayStr
     var tittle: String = content.name
 
-    init {
-        if (range > 0) {
-            daysInfo += "~"
-            daysInfo += weekDays[index + range].displayStr
+    var range: Int = range
+        set(value) {
+            if (value > 0) {
+                daysInfo += "~"
+                val endDayIndex = ProgressData.displayDayIndexArray[ProgressData.data2displayIndexArray[dataIndex] + value]
+                daysInfo += weekDays[endDayIndex].displayStr
+            }
+            field = value
         }
+
+    init {
         if (type == ProgressType.CLASS) {
             prepareNotify = ProcessNotify()
         }
@@ -220,9 +238,9 @@ class ItemProgress(private var progressInfo: ProgressInfo, var time: ItemTime,
     }
 }
 
-class ProgressInfo(begin: MyTime, duration: MyDuration, private var contentArray: Array<ProcessContent>) {
+class ProgressInfo(begin: MyTime, duration: MyDuration, private var contentArray: Array<ProcessContent>, private val mergeCell:Boolean = false) {
 
-    var cellRowRange:RowRange?
+    var cellRowRanges: ArrayList<RowRange> = arrayListOf()
     var time:ItemTime = ItemTime(this, begin, duration)
     private var sunday: ItemProgress
     private var monday: ItemProgress
@@ -233,32 +251,63 @@ class ProgressInfo(begin: MyTime, duration: MyDuration, private var contentArray
     private var saturday: ItemProgress
 
     init {
-        val tittleEndI = contentArray.lastIndex
         val weekItemArray: ArrayList<ItemProgress> = arrayListOf()
-        var lastItem = ItemProgress(this, time, 0, 0, contentArray[0])
-        weekItemArray.add(0, lastItem)
-        for (i in 1..4) {
-            val content = if (tittleEndI >= i) contentArray[i] else null
-            val range = if (tittleEndI < 4 && tittleEndI == i) 4 - tittleEndI else 0
-            lastItem = if (content != null) ItemProgress(this, time, i, range, content) else lastItem
-            weekItemArray.add(i, lastItem)
+        for (i in 0..contentArray.lastIndex) {
+            weekItemArray.add(i, ItemProgress(this, time, i, 0, contentArray[i]))
         }
-        val currentProcess: (Int) -> ItemProgress = { index: Int ->
-            if (weekDays[index].display) weekItemArray[weekDays[index].displayIdx] else lastItem
+        for (i in contentArray.lastIndex until WEEK_DAYS) {
+            weekItemArray.add(i, ItemProgress(this, time, i, 0, contentArray[contentArray.lastIndex]))
         }
-        sunday = currentProcess(0)
-        monday = currentProcess(1)
-        tuesday = currentProcess(2)
-        wednesday = currentProcess(3)
-        thursday = currentProcess(4)
-        friday = currentProcess(5)
-        saturday = currentProcess(6)
 
-        if (tittleEndI < 4) {
-            cellRowRange = RowRange(this.contentArray.lastIndex + 1, 5)
-        } else {
-            cellRowRange = null
+        if (mergeCell) {
+            val displayItems: ArrayList<ItemProgress> = arrayListOf()
+            for (index in ProgressData.displayDataIndexArray) {
+                displayItems.add(weekItemArray[index])
+            }
+
+            var recordDisplayItem: ItemProgress? = null
+            var recordIndex: Int = -1
+            var endIndex: Int = -1
+            for ((index, displayItem) in displayItems.withIndex()) {
+                if (recordDisplayItem == null) {
+                    recordDisplayItem = displayItem
+                    recordIndex = index
+                } else {
+                    if (recordDisplayItem.content == displayItem.content) {
+                        endIndex = index
+                    } else {
+                        if (endIndex != -1) {
+                            if (endIndex > recordIndex) {
+                                recordDisplayItem.range = endIndex - recordIndex
+                                cellRowRanges.add(RowRange(recordIndex + 1, endIndex + 1))
+                            }
+                            endIndex = -1
+                        }
+                        recordDisplayItem = displayItem
+                        recordIndex = index
+                    }
+                }
+            }
+            if (endIndex != -1) {
+                if (endIndex > recordIndex) {
+                    if (recordDisplayItem != null) {
+                        recordDisplayItem.range = endIndex - recordIndex
+                    }
+                    cellRowRanges.add(RowRange(recordIndex + 1, endIndex + 1))
+                }
+            }
         }
+        monday = weekItemArray[0]
+        tuesday = weekItemArray[1]
+        wednesday = weekItemArray[2]
+        thursday = weekItemArray[3]
+        friday = weekItemArray[4]
+        saturday = weekItemArray[5]
+        sunday = weekItemArray[6]
+    }
+
+    companion object{
+        const val WEEK_DAYS = 7
     }
 }
 
