@@ -12,8 +12,9 @@ import androidx.core.content.FileProvider
 import com.liujk.study_assistant.BuildConfig
 import com.liujk.study_assistant.TAG
 import com.liujk.study_assistant.WebActivity
+import com.liujk.study_assistant.data.Config
 import com.liujk.study_assistant.data.ProcessContent
-import com.liujk.study_assistant.data.weekDays
+import com.liujk.study_assistant.data.WeekDayInfo
 import com.liujk.study_assistant.utils.Storage
 import com.liujk.study_assistant.view.ActionList
 import java.io.File
@@ -30,8 +31,8 @@ enum class RunStatus {
     IDLE, RUNNING
 }
 
-class ProgressAction(var content: ProcessContent, var day: Int) {
-    val ROOT_DIR = "网课"
+class ProcessAction(var content: ProcessContent, var day: Int,
+                    var weekDays: ArrayList<WeekDayInfo>) {
     var status: RunStatus = RunStatus.IDLE
     private var actions:ArrayList<MyAction> = arrayListOf()
     private var note = ""
@@ -89,7 +90,7 @@ class ProgressAction(var content: ProcessContent, var day: Int) {
         actions = arrayListOf()
         note = ""
 
-        val rootDirs = Storage.findForDir(context, ROOT_DIR)
+        val rootDirs = Storage.findForDir(context, Config.ROOT_DIR)
         for (rootDir in rootDirs) {
             val processRoots = Storage.findDirsByNames(rootDir, content.names)
             for (processRoot in processRoots) {
@@ -118,7 +119,7 @@ class ProgressAction(var content: ProcessContent, var day: Int) {
         }
     }
 
-    fun run(context: Context, view: View) {
+    fun run(context: Context) {
         getActions(context)
         if (actions.size > 0 || note != "") {
             if (actions.size == 1 && note == "") {

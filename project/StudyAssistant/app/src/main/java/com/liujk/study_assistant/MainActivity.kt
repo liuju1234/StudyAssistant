@@ -15,8 +15,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.liujk.study_assistant.data.ProgressData
-import com.liujk.study_assistant.data.ProgressInfo
+import com.liujk.study_assistant.data.ProcessData
+import com.liujk.study_assistant.data.ProcessInfo
 import com.liujk.study_assistant.view.MySmartTable
 
 const val TAG = "liujk_log"
@@ -53,7 +53,7 @@ abstract class BaseActivity: AppCompatActivity() {
 }
 
 class MainActivity : BaseActivity() {
-    private lateinit var dataTable: MySmartTable<ProgressInfo>
+    private lateinit var dataTable: MySmartTable<ProcessInfo>
     private lateinit var headerText: TextView
     private lateinit var buttonCast: View
 
@@ -93,7 +93,7 @@ class MainActivity : BaseActivity() {
 
     fun afterPermissionOK() {
         Log.v(TAG, "call afterPermissionOK()")
-        dataTable.setTableData(ProgressData.getInstance(this, dataTable).toTableData())
+        dataTable.setTableData(ProcessData.getInstance(this).toTableData())
     }
 
     fun grantPermission() {
