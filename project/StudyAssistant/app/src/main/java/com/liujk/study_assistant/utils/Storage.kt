@@ -84,6 +84,22 @@ class Storage {
             return cur.path
         }
 
+        fun writeStrongToFile(str: String, file: File) {
+            try {
+                if (!file.exists()) {
+                    file.createNewFile()
+                }
+                val outputStream: OutputStream = FileOutputStream(file)
+                val outputWriter = OutputStreamWriter(outputStream)
+                outputWriter.write(str)
+                outputWriter.flush()
+                outputWriter.close()
+                outputStream.close()
+            } catch (e: Throwable) {
+                Log.d(TAG, "write file '$file' error", e)
+            }
+        }
+
         fun readStringFromFile(dir: File, fileName: String = ""): String {
             val stringList = readLinesFromFile(dir, fileName)
             var fileStr = ""
@@ -110,9 +126,9 @@ class Storage {
                 }
                 inputStream.close()
             } catch (e: FileNotFoundException) {
-                Log.d(TAG, "The File doesn't not exist.", e)
+                Log.d(TAG, "File '$file' doesn't not exist.", e)
             } catch (e: IOException) {
-                Log.d(TAG, "read file error", e)
+                Log.d(TAG, "read file '$file' error", e)
             }
             return lines
         }

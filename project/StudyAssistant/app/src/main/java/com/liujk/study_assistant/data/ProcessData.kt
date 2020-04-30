@@ -74,9 +74,10 @@ class ProcessData(val context: Context) {
 
     companion object {
         var dataMap: HashMap<Context, ProcessData> = hashMapOf()
-        val weekDays: ArrayList<WeekDayInfo>
-        val config: Config = Config.getDefault()
+        lateinit var weekDays: ArrayList<WeekDayInfo>
+        lateinit var config: Config
         fun getInstance(context: Context) : ProcessData {
+            initFromConfig(context)
             return dataMap[context] ?: ProcessData(
                 context
             ).also { dataMap[context] = it }
@@ -85,10 +86,11 @@ class ProcessData(val context: Context) {
         val displayDataIndexArray: ArrayList<Int> = arrayListOf()
         val displayDayIndexArray: ArrayList<Int> = arrayListOf()
         val displayDataIndexSet: HashSet<Int> = hashSetOf()
-        val dayIndexArray: Array<Int>
-        val data2displayIndexArray: Array<Int>
+        lateinit var dayIndexArray: Array<Int>
+        lateinit var data2displayIndexArray: Array<Int>
 
-        init {
+        fun initFromConfig(context: Context) {
+            config = Config.getConfig(context)
             config.loadWeekDays()
             weekDays = config.weekDays
             dayIndexArray = Array(weekDays.size) {-1}

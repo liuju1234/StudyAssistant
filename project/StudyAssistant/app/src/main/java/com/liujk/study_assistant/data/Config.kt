@@ -1,13 +1,14 @@
 package com.liujk.study_assistant.data
 
-import android.util.Log
+import android.content.Context
 import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
-import com.liujk.study_assistant.TAG
+import com.liujk.study_assistant.utils.Storage
+import java.io.File
 import java.lang.StringBuilder
 
-val defaultConfigRawString: String = """
+const val buildInConfigRawString: String = """
 {
     "weekDays": {
         "星期一": {"displayStr": "星期一", "field": "monday", "alias": ["周一", "Mon"]},
@@ -66,109 +67,105 @@ val defaultConfigRawString: String = """
         {"day": "星期四", "index": 3},
         {"day": "星期五", "index": 4},
     ],
-    "notes": [
-        {"语文":
+    "notes": {
+        "语文":
             {"common": "",
-            "days": [
-                {"星期一": ""},
-                {"星期二": ""},
-                {"星期三": ""},
-                {"星期四": ""},
-                {"星期五": ""},
-                ]
-            }
-        },
-        {"数学":
+            "days": {
+                "星期一": "",
+                "星期二": "",
+                "星期三": "",
+                "星期四": "",
+                "星期五": "",
+                }
+            },
+        "数学":
             {"common": "",
-            "days": [
-                {"星期一": ""},
-                {"星期二": ""},
-                {"星期三": ""},
-                {"星期四": ""},
-                {"星期五": ""},
-                ]}
-        },
-        {"英语":
+            "days": {
+                "星期一": "",
+                "星期二": "",
+                "星期三": "",
+                "星期四": "",
+                "星期五": "",
+                }
+            },
+        "英语":
             {"common": "",
-            "days": [
-                {"星期一": ""},
-                {"星期二": ""},
-                {"星期三": ""},
-                {"星期四": ""},
-                {"星期五": ""},
-                ]}
-        },
-    ],
-    "urls": [
-        {"语文":
+            "days": {
+                "星期一": "",
+                "星期二": "",
+                "星期三": "",
+                "星期四": "",
+                "星期五": "",
+                }
+            },
+    },
+    "urls": {
+        "语文":
             {"common": "",
-            "days": [
-                {"星期一": ""},
-                {"星期二": ""},
-                {"星期三": ""},
-                {"星期四": ""},
-                {"星期五": ""},
-                ]}
-        },
-        {"英语":
+            "days": {
+                "星期一": "",
+                "星期二": "",
+                "星期三": "",
+                "星期四": "",
+                "星期五": "",
+                }
+            },
+        "英语":
             {"common": "",
-            "days": [
-                {"星期一": ""},
-                {"星期二": ""},
-                {"星期三": ""},
-                {"星期四": ""},
-                {"星期五": ""},
-                ]}
-        },
-    ],
+            "days": {
+                "星期一": "",
+                "星期二": "",
+                "星期三": "",
+                "星期四": "",
+                "星期五": "",
+                }
+            },
+    },
 }
 """
 
-class Config(var rootJson: JsonObject) {
+class Config(var rootJsons: List<JsonObject>) {
     lateinit var weekDays: ArrayList<WeekDayInfo>
     lateinit var processesTable: ArrayList<ProcessInfo>
     fun loadWeekDays() {
-        val displayDays = rootJson.array<JsonObject>("displayDays") as JsonArray<JsonObject>
-        val weekDaysCfg = rootJson.obj("weekDays")
-        if (weekDaysCfg != null) {
-            weekDays = ArrayList(weekDaysCfg.size)
-            val displayDaysSet = hashSetOf<String>()
-            for (displayDay in displayDays) {
-                val displayDayStr: String = displayDay.string("day") ?: ""
-                displayDaysSet.add(displayDayStr)
-                val weekDayCfg = weekDaysCfg[displayDayStr] as JsonObject
-                val weekDayInfo = WeekDayInfo(weekDayCfg, true, displayDay.int("index") ?: 0)
-                //Log.v(TAG, "add display Day $weekDayInfo")
+        val displayDays = getFromConfigs<JsonArray<JsonObject>>("displayDays")
+        val weekDaysCfg = getFromConfigs<JsonObject>("weekDays")
+
+        weekDays = ArrayList(weekDaysCfg.size)
+        val displayDaysSet = hashSetOf<String>()
+        for (displayDay in displayDays) {
+            val displayDayStr: String = displayDay.string("day") ?: ""
+            displayDaysSet.add(displayDayStr)
+            val weekDayCfg = weekDaysCfg[displayDayStr] as JsonObject
+            val weekDayInfo = WeekDayInfo(weekDayCfg, true, displayDay.int("index") ?: 0)
+            //Log.v(TAG, "add display Day $weekDayInfo")
+            weekDays.add(weekDayInfo)
+        }
+        for ((key, value) in weekDaysCfg) {
+            if (!displayDaysSet.contains(key)) {
+                val weekDayInfo = WeekDayInfo(value as JsonObject, false, 0)
+                //Log.v(TAG, "add no display Day $weekDayInfo")
                 weekDays.add(weekDayInfo)
             }
-            for ((key, value) in weekDaysCfg) {
-                if (!displayDaysSet.contains(key)) {
-                    val weekDayInfo = WeekDayInfo(value as JsonObject, false, 0)
-                    //Log.v(TAG, "add no display Day $weekDayInfo")
-                    weekDays.add(weekDayInfo)
-                }
-            }
-        } else {
-            weekDays = arrayListOf()
         }
     }
 
     fun loadProcessesTable() {
         val processContentMap = HashMap<String, ProcessContent>()
-        val processContentsCfg = rootJson["processContents"] as JsonObject
+        val processContentsCfg = getFromConfigs<JsonObject>("processContents")
         for ((key, value) in processContentsCfg) {
             processContentMap[key] = ProcessContent(value as JsonObject)
         }
 
         processesTable = arrayListOf()
-        val processesTableCfg = rootJson.array<JsonObject>("processesTable") as JsonArray<JsonObject>
+        val processesTableCfg = getFromConfigs<JsonArray<JsonObject>>("processesTable")
         for (processesRowCfg in processesTableCfg) {
             processesTable.add(objToProcessInfo(processesRowCfg, processContentMap))
         }
     }
 
     private fun objToProcessInfo(cfg: JsonObject, processContentMap: HashMap<String, ProcessContent>) : ProcessInfo {
-        val processesArrayCfg = cfg.array<String>("processes") as JsonArray<String>
+        val processesArrayCfg = cfg.array<String>("processes") ?: JsonArray<String>()
         val processesArray = arrayListOf<ProcessContent>()
         for (processKey in processesArrayCfg) {
             processContentMap[processKey]?.let { processesArray.add(it) }
@@ -179,13 +176,52 @@ class Config(var rootJson: JsonObject) {
         )
     }
 
+    private inline fun <reified T> getFromConfigs(fieldName: String) : T {
+        for (rootJson in rootJsons) {
+            val field = rootJson[fieldName]
+            if (field != null && field is T) {
+                return field as T
+            }
+        }
+        return T::class.java.newInstance()
+    }
+
     companion object {
         val parser = Parser.default()
         const val ROOT_DIR = "网课"
+        const val CFG_FILE_NAME = "配置.txt"
 
-        fun getDefault(): Config {
-            val rootJson = parser.parse(StringBuilder(defaultConfigRawString)) as JsonObject
-            return Config(rootJson)
+        private fun getBuildInCfgJson() : JsonObject {
+            return parser.parse(StringBuilder(buildInConfigRawString)) as JsonObject
+        }
+
+        fun getConfig(context: Context): Config {
+            val cfgJsonList = arrayListOf<JsonObject>()
+            var noConfigFile = true
+            val rootDirs = Storage.findForDir(context, ROOT_DIR)
+            for(rootDir in rootDirs) {
+                val cfgFile = File(rootDir, CFG_FILE_NAME)
+                if (cfgFile.isFile && cfgFile.canRead()) {
+                    try {
+                        val cfgJson = parser.parse(cfgFile.path) as JsonObject
+                        noConfigFile = false
+                        cfgJsonList.add(cfgJson)
+                    } catch (e: Throwable) {
+                        // ignore
+                    }
+                }
+            }
+            if (noConfigFile && rootDirs.isNotEmpty()) {
+                val fileToWrite = File(rootDirs[0], CFG_FILE_NAME)
+                Storage.writeStrongToFile(buildInConfigRawString, fileToWrite)
+            }
+            cfgJsonList.add(getBuildInCfgJson())
+
+            return Config(cfgJsonList)
+        }
+
+        fun getBuildInConfig(): Config {
+            return Config(listOf(getBuildInCfgJson()))
         }
     }
 }

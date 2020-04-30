@@ -156,7 +156,7 @@ class WebActivity : BaseActivity() {
             try {
                 val intent = Intent(Intent.ACTION_MAIN)
                 intent.component =
-                    ComponentName(context.packageName, context.packageName + ".WebActivity")
+                    ComponentName(context, WebActivity::class.java)
                 intent.putExtra(DATA_URL, urlStr)
                 context.startActivity(intent)
             } catch (e: Exception) {
