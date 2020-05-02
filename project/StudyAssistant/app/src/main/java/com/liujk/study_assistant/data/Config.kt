@@ -101,7 +101,7 @@ const val buildInConfigRawString: String = """
     },
     "urls": {
         "语文":
-            {"common": "",
+            {"common": "https://v.campus.qq.com/gkk/3cumat9#/course",
             "days": {
                 "星期一": "",
                 "星期二": "",
@@ -176,6 +176,26 @@ class Config(var rootJsons: List<JsonObject>) {
         )
     }
 
+    fun getUrlForProcess(processName: String, day: String): String {
+        return getInfoForProcess("urls", processName, day)
+    }
+
+    fun getNotesForProcess(processName: String, day: String): String {
+        return getInfoForProcess("notes", processName, day)
+    }
+
+    private fun getInfoForProcess(infoName:String, processName: String, day: String): String {
+        val infoCfg = getFromConfigs<JsonObject>(infoName)
+        val processInfoCfg = infoCfg[processName] as JsonObject
+        val commonInfo = processInfoCfg["common"] as String
+        val dayInfo = (processInfoCfg["days"] as JsonObject)[day] as String
+        return if (commonInfo != "" && dayInfo != "") {
+            commonInfo + '\n' + dayInfo
+        } else {
+            commonInfo + dayInfo
+        }
+    }
+
     private inline fun <reified T> getFromConfigs(fieldName: String) : T {
         for (rootJson in rootJsons) {
             val field = rootJson[fieldName]
@@ -190,12 +210,13 @@ class Config(var rootJsons: List<JsonObject>) {
         val parser = Parser.default()
         const val ROOT_DIR = "网课"
         const val CFG_FILE_NAME = "配置.txt"
+        var initConfig: Config? = null
 
         private fun getBuildInCfgJson() : JsonObject {
             return parser.parse(StringBuilder(buildInConfigRawString)) as JsonObject
         }
 
-        fun getConfig(context: Context): Config {
+        fun loadConfig(context: Context): Boolean {
             val cfgJsonList = arrayListOf<JsonObject>()
             var noConfigFile = true
             val rootDirs = Storage.findForDir(context, ROOT_DIR)
@@ -211,13 +232,38 @@ class Config(var rootJsons: List<JsonObject>) {
                     }
                 }
             }
-            if (noConfigFile && rootDirs.isNotEmpty()) {
-                val fileToWrite = File(rootDirs[0], CFG_FILE_NAME)
-                Storage.writeStrongToFile(buildInConfigRawString, fileToWrite)
-            }
             cfgJsonList.add(getBuildInCfgJson())
 
-            return Config(cfgJsonList)
+            initConfig = Config(cfgJsonList)
+            return noConfigFile
+        }
+
+        fun getConfig(): Config {
+            if (initConfig != null) {
+                return initConfig as Config
+            } else {
+                return getBuildInConfig()
+            }
+        }
+
+        fun writeBuildInConfig(context: Context) {
+            val fileToWrite = File(Storage.buildPath(getNeedWriteDriverPath(context).path, ROOT_DIR, CFG_FILE_NAME))
+            Storage.writeStringToFile(context, buildInConfigRawString, fileToWrite)
+        }
+
+        fun getNeedWriteDriverPath(context: Context): File {
+            val rootDirs = Storage.findForDir(context, ROOT_DIR)
+            var driverDirs = arrayListOf<File>()
+            for (rootDir in rootDirs) {
+                driverDirs.add(File(rootDir.parent))
+            }
+            if (driverDirs.isEmpty()) {
+                driverDirs = Storage.getDriverDirs(context)
+            }
+            if (driverDirs.isEmpty()) {
+                return File("/sdcard").absoluteFile.canonicalFile
+            }
+            return driverDirs[0]
         }
 
         fun getBuildInConfig(): Config {

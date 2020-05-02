@@ -6,7 +6,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.util.Log
-import android.view.View
 import android.widget.Toast
 import androidx.core.content.FileProvider
 import com.liujk.study_assistant.BuildConfig
@@ -37,6 +36,15 @@ class ProcessAction(var content: ProcessContent, var day: Int,
     private var actions:ArrayList<MyAction> = arrayListOf()
     private var note = ""
 
+    private fun addNote(noteStr: String) {
+        if (noteStr != "") {
+            if (note != "") {
+                note += "\n"
+            }
+            note += noteStr
+        }
+    }
+
     private fun findActionsFromOneDir(dir: File) {
         if (dir.isDirectory) {
             val fileNames = dir.list()
@@ -48,8 +56,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
                                 TAG,
                                 "add note from '${Storage.buildPath(dir.path, fileName)}'"
                             )
-                            if (note != "") note += "\n"
-                            note += Storage.readStringFromFile(dir, fileName)
+                            addNote(Storage.readStringFromFile(dir, fileName))
                         }
                         fileName == "url.txt" -> {
                             Log.v(
@@ -86,6 +93,14 @@ class ProcessAction(var content: ProcessContent, var day: Int,
         }
     }
 
+    private fun findActionsFromConfig() {
+        val config = Config.getConfig()
+        val urlString = config.getUrlForProcess(content.name, weekDays[day].displayStr)
+        addMultiUrls(actions, urlString)
+        val notesString = config.getNotesForProcess(content.name, weekDays[day].displayStr)
+        addNote(notesString)
+    }
+
     private fun getActions(context: Context) {
         actions = arrayListOf()
         note = ""
@@ -101,10 +116,17 @@ class ProcessAction(var content: ProcessContent, var day: Int,
                 }
             }
         }
+        findActionsFromConfig()
+    }
+
+    private fun addMultiUrls(actions:ArrayList<MyAction>, urls: String) {
+        addMultiActions(actions, ActionType.URL, urls.split('\n'))
     }
 
     private fun addMultiActions(actions:ArrayList<MyAction>, type: ActionType, file: File) {
-        val lines: List<String> = Storage.readLinesFromFile(file)
+        addMultiActions(actions, type, Storage.readLinesFromFile(file))
+    }
+    private fun addMultiActions(actions:ArrayList<MyAction>, type: ActionType, lines: List<String>) {
         for (line in lines) {
             val lineTrim = line.trim()
             if (lineTrim != "" && !lineTrim.startsWith('#')) {

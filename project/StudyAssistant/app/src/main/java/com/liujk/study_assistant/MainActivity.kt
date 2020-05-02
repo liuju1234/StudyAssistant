@@ -1,26 +1,33 @@
 package com.liujk.study_assistant
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings;
+import android.os.storage.StorageManager
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.liujk.study_assistant.data.Config
 import com.liujk.study_assistant.data.ProcessData
 import com.liujk.study_assistant.data.ProcessInfo
+import com.liujk.study_assistant.utils.DocumentsUtils
 import com.liujk.study_assistant.view.MySmartTable
+import java.io.File
+
 
 const val TAG = "liujk_log"
-private const val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 100
 
 abstract class BaseActivity: AppCompatActivity() {
     var canFinish: Boolean = false
@@ -91,17 +98,61 @@ class MainActivity : BaseActivity() {
         headerText.visibility = View.VISIBLE
     }
 
-    fun afterPermissionOK() {
-        Log.v(TAG, "call afterPermissionOK()")
-        dataTable.setTableData(ProcessData.getInstance(this).toTableData())
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun showOpenDocumentTree(rootPath: File) {
+        var intent: Intent? = null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            val sm: StorageManager = this.getSystemService(Context.STORAGE_SERVICE) as StorageManager
+            val volume = sm.getStorageVolume(rootPath)
+            if (volume != null) {
+                intent = volume.createAccessIntent(null)
+            }
+        }
+        if (intent == null) {
+            intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        }
+        startActivityForResult(intent, MY_REQUEST_OPEN_DOCUMENT_TREE)
     }
 
-    fun grantPermission() {
+    lateinit var needWriteDriverPath: File
+    private fun loadConfigFromFile() {
+        val noConfigFile = Config.loadConfig(this)
+        if (noConfigFile) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                needWriteDriverPath = Config.getNeedWriteDriverPath(this)
+                if (DocumentsUtils.isOnExtSdCard(needWriteDriverPath, this)) {
+                    showOpenDocumentTree(needWriteDriverPath)
+                    return
+                }
+            }
+        }
+    }
+
+    private fun afterPermissionOK() {
+        Log.v(TAG, "call afterPermissionOK()")
+        loadConfigFromFile()
+        dataTable.tableData = ProcessData.getInstance(this).toTableData()
+    }
+
+    private var requestPermissionOK: () -> Unit = {afterPermissionOK()}
+    private var currentRequestCode = MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE
+
+    private fun grantPermission() {
+        grantPermission(Manifest.permission.READ_EXTERNAL_STORAGE, MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE) {
+            grantPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE) {
+                afterPermissionOK()
+            }
+        }
+    }
+
+    private fun grantPermission(permission: String, requestCode: Int, permissionOK : () -> Unit) {
+        requestPermissionOK = permissionOK
+        currentRequestCode = requestCode
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+            if (ContextCompat.checkSelfPermission(this, permission)
                 != PackageManager.PERMISSION_GRANTED) {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                        Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                        permission)) {
                     // Show an explanation to the user *asynchronously* -- don't block
                     // this thread waiting for the user's response! After the user
                     // sees the explanation, try again to request the permission.
@@ -109,31 +160,31 @@ class MainActivity : BaseActivity() {
                 } else {
                     // No explanation needed, we can request the permission.
                     ActivityCompat.requestPermissions(this,
-                        arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                        MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE)
+                        arrayOf(permission),
+                        requestCode)
 
                     // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
                     // app-defined int constant. The callback method gets the
                     // result of the request.
                 }
             } else {
-                afterPermissionOK()
+                permissionOK()
             }
         } else {
-            afterPermissionOK()
+            permissionOK()
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int,
                                             permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
-            MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE -> {
+            currentRequestCode -> {
                 // If request is cancelled, the result arrays are empty.
                 if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
                     // permission was granted, yay! Do the
                     // contacts-related task you need to do.
                     Toast.makeText(this, "已授权存储权限", Toast.LENGTH_SHORT).show()
-                    afterPermissionOK()
+                    requestPermissionOK()
                 } else {
                     // permission denied, boo! Disable the
                     // functionality that depends on this permission.
@@ -148,5 +199,25 @@ class MainActivity : BaseActivity() {
                 // Ignore all other requests.
             }
         }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            MY_REQUEST_OPEN_DOCUMENT_TREE -> if (data != null && data.data != null) {
+                val uri: Uri = data.data!!
+                DocumentsUtils.saveTreeUri(this, needWriteDriverPath.path, uri)
+                //afterPermissionOK()
+                Config.writeBuildInConfig(this)
+            }
+            else -> {
+            }
+        }
+    }
+
+    companion object{
+        private const val MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 100
+        private const val MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 101
+        private const val MY_REQUEST_OPEN_DOCUMENT_TREE = 102
     }
 }

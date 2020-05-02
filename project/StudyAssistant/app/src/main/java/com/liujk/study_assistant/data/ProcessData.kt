@@ -10,9 +10,9 @@ import com.liujk.study_assistant.TAG
 import com.liujk.study_assistant.action.ProcessNotify
 import com.liujk.study_assistant.action.ProcessAction
 
-val MILLIS_MINUTE: Long = 60 * 1000
-val MILLIS_HOURE: Long = 60 * MILLIS_MINUTE
-val MILLIS_DAY: Long = 24 * MILLIS_HOURE
+const val MILLIS_MINUTE: Long = 60 * 1000
+const val MILLIS_HOUR: Long = 60 * MILLIS_MINUTE
+const val MILLIS_DAY: Long = 24 * MILLIS_HOUR
 
 class WeekDayInfo(val displayStr: String, val field: String, initAlias: Array<String>, val display: Boolean, val dataIdx: Int) {
     constructor(cfg: JsonObject, display: Boolean, dataIdx: Int) :
@@ -61,7 +61,7 @@ class ProcessData(val context: Context) {
         val processesTable: ArrayList<ProcessInfo> = config.processesTable
         val tableData = TableData("课程表", processesTable, columnList)
         val ranges: ArrayList<CellRange> = arrayListOf()
-        for (index in 0 until processesTable.size) {
+        for (index in processesTable.indices) {
             for (cellRowRange in processesTable[index].cellRowRanges) {
                 ranges.add(cellRowRange.toCellRange(index))
             }
@@ -77,7 +77,7 @@ class ProcessData(val context: Context) {
         lateinit var weekDays: ArrayList<WeekDayInfo>
         lateinit var config: Config
         fun getInstance(context: Context) : ProcessData {
-            initFromConfig(context)
+            initFromConfig()
             return dataMap[context] ?: ProcessData(
                 context
             ).also { dataMap[context] = it }
@@ -89,8 +89,8 @@ class ProcessData(val context: Context) {
         lateinit var dayIndexArray: Array<Int>
         lateinit var data2displayIndexArray: Array<Int>
 
-        fun initFromConfig(context: Context) {
-            config = Config.getConfig(context)
+        fun initFromConfig() {
+            config = Config.getConfig()
             config.loadWeekDays()
             weekDays = config.weekDays
             dayIndexArray = Array(weekDays.size) {-1}
@@ -226,7 +226,7 @@ class ProcessInfo(begin: MyTime, duration: MyDuration, private var contentArray:
         val fallbackDataIndex = ProcessData.displayDataIndexArray[0]
         val fallbackItemProcess = ItemProcess(this, time, fallbackDataIndex,
             0, contentArray[0], weekDays)
-        for (i in 0..contentArray.lastIndex) {
+        for (i in contentArray.indices) {
             val itemProcess: ItemProcess
             if (ProcessData.displayDataIndexSet.contains(i)) {
                 itemProcess = ItemProcess(
@@ -238,15 +238,14 @@ class ProcessInfo(begin: MyTime, duration: MyDuration, private var contentArray:
             }
             weekItemArray.add(i, itemProcess)
         }
-        for (i in contentArray.lastIndex until weekDays.size) {
-            val itemProcess: ItemProcess
-            if (ProcessData.displayDataIndexSet.contains(i)) {
-                itemProcess = ItemProcess(
+        for (i in contentArray.size until weekDays.size) {
+            val itemProcess: ItemProcess = if (ProcessData.displayDataIndexSet.contains(i)) {
+                ItemProcess(
                     this, time, i, 0,
                     contentArray[contentArray.lastIndex], weekDays
                 )
             } else {
-                itemProcess = fallbackItemProcess
+                fallbackItemProcess
             }
             weekItemArray.add(i, itemProcess)
         }
