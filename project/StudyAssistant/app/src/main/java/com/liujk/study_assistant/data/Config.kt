@@ -186,9 +186,9 @@ class Config(var rootJsons: List<JsonObject>) {
 
     private fun getInfoForProcess(infoName:String, processName: String, day: String): String {
         val infoCfg = getFromConfigs<JsonObject>(infoName)
-        val processInfoCfg = infoCfg[processName] as JsonObject
-        val commonInfo = processInfoCfg["common"] as String
-        val dayInfo = (processInfoCfg["days"] as JsonObject)[day] as String
+        val processInfoCfg = infoCfg[processName] as JsonObject?
+        val commonInfo = processInfoCfg?.get("common") as String? ?: ""
+        val dayInfo = (processInfoCfg?.get("days") as JsonObject?)?.get(day) as String? ?: ""
         return if (commonInfo != "" && dayInfo != "") {
             commonInfo + '\n' + dayInfo
         } else {
