@@ -10,6 +10,8 @@ import android.util.Log
 import androidx.documentfile.provider.DocumentFile
 import com.liujk.study_assistant.TAG
 import java.io.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 object DocumentsUtils {
@@ -217,10 +219,10 @@ object DocumentsUtils {
                 DocumentFile.fromFile(src)
             }
             val destDoc =
-                getDocumentFile(dest.getParentFile(), true, context)
+                getDocumentFile(dest.getParentFile() ?: File("/"), true, context)
             if (srcDoc != null && destDoc != null) {
                 try {
-                    if (src.getParent().equals(dest.getParent())) {
+                    if (Objects.equals(src.getParent(), dest.getParent())) {
                         res = srcDoc.renameTo(dest.getName())
                     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                         res = DocumentsContract.moveDocument(
@@ -295,7 +297,7 @@ object DocumentsUtils {
         return false
     }
 
-    fun checkWritableRootPath(context: Context, rootPath: String?): Boolean {
+    fun checkWritableRootPath(context: Context, rootPath: String): Boolean {
         val root = File(rootPath)
         return if (!root.canWrite()) {
             if (isOnExtSdCard(root, context)) {

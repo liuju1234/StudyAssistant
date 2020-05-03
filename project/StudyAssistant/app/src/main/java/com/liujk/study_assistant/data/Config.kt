@@ -200,7 +200,7 @@ class Config(var rootJsons: List<JsonObject>) {
         for (rootJson in rootJsons) {
             val field = rootJson[fieldName]
             if (field != null && field is T) {
-                return field as T
+                return field
             }
         }
         return T::class.java.newInstance()
@@ -255,7 +255,10 @@ class Config(var rootJsons: List<JsonObject>) {
             val rootDirs = Storage.findForDir(context, ROOT_DIR)
             var driverDirs = arrayListOf<File>()
             for (rootDir in rootDirs) {
-                driverDirs.add(File(rootDir.parent))
+                val parentDir = rootDir.parent
+                if (parentDir != null) {
+                    driverDirs.add(File(parentDir))
+                }
             }
             if (driverDirs.isEmpty()) {
                 driverDirs = Storage.getDriverDirs(context)

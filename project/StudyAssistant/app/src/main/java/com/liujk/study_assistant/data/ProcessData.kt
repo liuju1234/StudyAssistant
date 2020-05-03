@@ -45,7 +45,7 @@ class ProcessData(val context: Context) {
         }
 
         for (oneColumn in columnList) {
-            oneColumn.setOnColumnItemClickListener { column, s, item, i ->
+            oneColumn.setOnColumnItemClickListener { _, _, item, _ ->
                 if (item is MyItem) {
                     Log.v(TAG, "onClick item ${item.dump()}")
                     if (item is ItemProcess) {

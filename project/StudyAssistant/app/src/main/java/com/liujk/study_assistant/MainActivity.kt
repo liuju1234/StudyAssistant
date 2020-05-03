@@ -101,7 +101,8 @@ class MainActivity : BaseActivity() {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun showOpenDocumentTree(rootPath: File) {
         var intent: Intent? = null
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+            Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
             val sm: StorageManager = this.getSystemService(Context.STORAGE_SERVICE) as StorageManager
             val volume = sm.getStorageVolume(rootPath)
             if (volume != null) {
