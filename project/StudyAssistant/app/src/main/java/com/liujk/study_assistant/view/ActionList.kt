@@ -9,6 +9,7 @@ import android.widget.BaseAdapter
 import android.widget.ListView
 import android.widget.TextView
 import com.liujk.study_assistant.R
+import com.liujk.study_assistant.action.ActionType
 import com.liujk.study_assistant.action.MyAction
 
 class ActionList(var context: Context, var actions: List<MyAction>) {
@@ -39,10 +40,18 @@ class ActionListAdapter(var context: Context, var actions: List<MyAction>) : Bas
         val action = actions[position]
         val itemType = itemView.findViewById<TextView>(R.id.type)
         val itemContent = itemView.findViewById<TextView>(R.id.content)
-        itemType.text = action.type.toString()
+        itemType.text = getTypeStr(action.type)
         itemContent.text = action.display
         itemView.setOnClickListener { action.run(context) }
         return itemView
+    }
+
+    private fun getTypeStr(type: ActionType): String {
+        return when(type) {
+            ActionType.URL -> "网址"
+            ActionType.VIDEO -> "视频"
+            else -> ""
+        }
     }
 
     override fun getItem(position: Int): Any {

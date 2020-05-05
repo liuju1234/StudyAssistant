@@ -117,6 +117,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
             }
         }
         findActionsFromConfig()
+        actions.sort()
     }
 
     private fun addMultiUrls(actions:ArrayList<MyAction>, urls: String) {
@@ -153,7 +154,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
     }
 }
 
-class MyAction(var type: ActionType, var param: String) {
+class MyAction(var type: ActionType, var param: String) : Comparable<MyAction> {
     var display = param
     init {
         if (type == ActionType.VIDEO) {
@@ -202,6 +203,13 @@ class MyAction(var type: ActionType, var param: String) {
 
     override fun toString(): String {
         return "Action{$type, $param}"
+    }
+
+    override fun compareTo(other: MyAction): Int {
+        return if (type > other.type) 1
+        else if (type == other.type) {
+            param.compareTo(other.param)
+        } else -1
     }
 }
 

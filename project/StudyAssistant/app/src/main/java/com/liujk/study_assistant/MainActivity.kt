@@ -118,14 +118,18 @@ class MainActivity : BaseActivity() {
     lateinit var needWriteDriverPath: File
     private fun loadConfigFromFile() {
         val noConfigFile = Config.loadConfig(this)
+        Log.v(TAG, "noConfigFile is $noConfigFile")
         if (noConfigFile) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
+                Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
                 needWriteDriverPath = Config.getNeedWriteDriverPath(this)
                 if (DocumentsUtils.isOnExtSdCard(needWriteDriverPath, this)) {
                     showOpenDocumentTree(needWriteDriverPath)
                     return
                 }
             }
+            Log.v(TAG, "Config.writeBuildInConfig()")
+            Config.writeBuildInConfig(this)
         }
     }
 
@@ -209,6 +213,7 @@ class MainActivity : BaseActivity() {
                 val uri: Uri = data.data!!
                 DocumentsUtils.saveTreeUri(this, needWriteDriverPath.path, uri)
                 //afterPermissionOK()
+                Log.v(TAG, "Config.writeBuildInConfig()")
                 Config.writeBuildInConfig(this)
             }
             else -> {
