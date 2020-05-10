@@ -45,7 +45,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
         }
     }
 
-    private fun findActionsFromOneDir(dir: File) {
+    private fun findActionsFromOneDir(dir: File, findSub: Boolean = false) {
         if (dir.isDirectory) {
             val fileNames = dir.list()
             if (fileNames != null) {
@@ -87,6 +87,12 @@ class ProcessAction(var content: ProcessContent, var day: Int,
                                 )
                             )
                         }
+                        findSub -> {
+                            val subFile = File(dir, fileName)
+                            if (subFile.isDirectory) {
+                                findActionsFromOneDir(subFile)
+                            }
+                        }
                     }
                 }
             }
@@ -112,7 +118,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
                 findActionsFromOneDir(processRoot)
                 val processDayDirs = Storage.findDirsByNames(processRoot, weekDays[day].alias)
                 for (processDayDir in processDayDirs) {
-                    findActionsFromOneDir(processDayDir)
+                    findActionsFromOneDir(processDayDir, true)
                 }
             }
         }
