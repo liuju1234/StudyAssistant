@@ -23,7 +23,7 @@ enum class ActionTimes {
 }
 
 enum class ActionType {
-    URL, VIDEO, APP
+    URL, VIDEO, APP, OTHER
 }
 
 enum class RunStatus {
@@ -34,6 +34,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
                     var weekDays: ArrayList<WeekDayInfo>) {
     var status: RunStatus = RunStatus.IDLE
     private var actions:ArrayList<MyAction> = arrayListOf()
+    private var otherActionsMap: HashMap<String, ArrayList<MyAction>> = hashMapOf()
     private var note = ""
 
     private fun addNote(noteStr: String) {
@@ -45,7 +46,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
         }
     }
 
-    private fun findActionsFromOneDir(dir: File, findSub: Boolean = false) {
+    private fun findActionsFromOneDir(actions: ArrayList<MyAction>, dir: File, findSub: Boolean = false) {
         if (dir.isDirectory) {
             val fileNames = dir.list()
             if (fileNames != null) {
@@ -90,7 +91,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
                         findSub -> {
                             val subFile = File(dir, fileName)
                             if (subFile.isDirectory) {
-                                findActionsFromOneDir(subFile)
+                                findActionsFromOneDir(actions, subFile)
                             }
                         }
                     }
@@ -109,20 +110,39 @@ class ProcessAction(var content: ProcessContent, var day: Int,
 
     private fun getActions(context: Context) {
         actions = arrayListOf()
+        otherActionsMap = hashMapOf()
         note = ""
 
+        findActionsFromConfig()
         val rootDirs = Storage.findForDir(context, Config.ROOT_DIR)
         for (rootDir in rootDirs) {
-            val processRoots = Storage.findDirsByNames(rootDir, content.names)
+            val (processRoots, _) = Storage.findDirsByNames(rootDir, content.names)
             for (processRoot in processRoots) {
-                findActionsFromOneDir(processRoot)
-                val processDayDirs = Storage.findDirsByNames(processRoot, weekDays[day].alias)
+                findActionsFromOneDir(actions, processRoot)
+                val (processDayDirs, otherDirs) = Storage.findDirsByNames(processRoot, weekDays[day].alias)
                 for (processDayDir in processDayDirs) {
-                    findActionsFromOneDir(processDayDir, true)
+                    findActionsFromOneDir(actions, processDayDir, true)
+                }
+                for (otherDir in otherDirs) {
+                    var notDaysDir = true
+                    for (day in weekDays) {
+                        for (name in day.alias) {
+                            if (otherDir.name.contains(name)) {
+                                notDaysDir = false
+                            }
+                        }
+                    }
+                    if (notDaysDir) {
+                        val otherActions = arrayListOf<MyAction>()
+                        findActionsFromOneDir(otherActions, otherDir, true)
+                        if (otherActions.size > 0) {
+                            otherActions.sort()
+                            otherActionsMap[otherDir.name] = otherActions
+                        }
+                    }
                 }
             }
         }
-        findActionsFromConfig()
         actions.sort()
     }
 
@@ -154,7 +174,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
             if (actions.size == 1 && note == "") {
                 actions[0].run(context)
             } else {
-                ActionList(context, actions).display(note)
+                ActionList(context, actions, otherActionsMap).display(note)
             }
         }
     }

@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Environment
 import android.util.Log
 import com.liujk.study_assistant.TAG
-import com.liujk.study_assistant.utils.DocumentsUtils
 import java.io.*
 import java.lang.Exception
 
@@ -59,21 +58,27 @@ object Storage {
         return rootDirs
     }
 
-    fun findDirsByNames(dir: File, names:List<String>): List<File> {
+    fun findDirsByNames(dir: File, names:List<String>): Pair<List<File>, List<File>> {
         val resDirs = arrayListOf<File>()
+        val otherDirs = arrayListOf<File>()
         if (dir.isDirectory) {
             val fileList = dir.listFiles()
             if (fileList != null) {
                 for (subPath in fileList) {
+                    var isOther = true
                     for (name in names) {
                         if (subPath.path.contains(name, true)) {
                             resDirs.add(subPath)
+                            isOther = false
                         }
+                    }
+                    if (isOther) {
+                        otherDirs.add(subPath)
                     }
                 }
             }
         }
-        return resDirs
+        return Pair(resDirs, otherDirs)
     }
 
     fun buildPath(base: String, vararg segments: String) : String {
