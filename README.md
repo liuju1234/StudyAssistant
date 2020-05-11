@@ -1,7 +1,7 @@
 # StudyAssistant/学习助手
 
 这是一个学习助手Android应用，为了方便给低年级孩子在家上网课，以课程表的形式展现，如下：
-![主界面](https://github.com/liuju1234/StudyAssistant/blob/master/images/device-2020-05-11-221117.png)
+![主界面](https://github.com/liuju1234/StudyAssistant/blob/master/images/device-2020-05-12-003320.jpg)
 点击一项时，会根据扫描配置文件和存储文件相应配置进行接下来的操作
 ![点击星期一英语](https://github.com/liuju1234/StudyAssistant/blob/master/images/device-2020-05-11-232905.jpg)
 有的课程需要有一项说明，有的课程是播放视频文件，有的课程需要访问一个网址看视频，这些都已经支持
