@@ -8,6 +8,10 @@
 
 还有的需要打开微信小程序，会在后续版本支持
 
+## 下载
+    https://github.com/liuju1234/StudyAssistant/releases/
+    test_data需要下载Source Code后解压获取
+
 ## 关于投射
 右上角TV是一个跳转，点击后悔跳转到设置应用的Mirocast设置，可以将屏幕投射到电视、投影仪等支持Mirocast的设备
 
