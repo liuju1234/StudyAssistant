@@ -9,7 +9,8 @@
 还有的需要打开微信小程序，会在后续版本支持
 
 ## 下载
-    https://github.com/liuju1234/StudyAssistant/releases/
+https://github.com/liuju1234/StudyAssistant/releases/
+
     test_data需要下载Source Code后解压获取
 
 ## 关于投射
