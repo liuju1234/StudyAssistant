@@ -22,6 +22,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import com.liujk.study_assistant.data.Config
 import com.liujk.study_assistant.data.ProcessData
 import com.liujk.study_assistant.data.ProcessInfo
@@ -66,6 +67,7 @@ class MainActivity : BaseActivity() {
     private lateinit var dataTable: MySmartTable<ProcessInfo>
     private lateinit var headerText: TextView
     private lateinit var buttonCast: View
+    private lateinit var buttonDebug: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,11 +86,16 @@ class MainActivity : BaseActivity() {
         } else {
             buttonCast.visibility = View.GONE
         }
+
+        buttonDebug = findViewById(R.id.button_debug)
+        buttonDebug.setOnClickListener {
+            switchDebugInfo()
+        }
+
         grantPermission()
-        //displayInfo()
     }
 
-    fun displayInfo() {
+    private fun switchDebugInfo() {
         val displayMetrics = this.resources.displayMetrics
         headerText.setText("SDK Version: ${Build.VERSION.SDK_INT} " +
                 "density: ${displayMetrics.density} " +
@@ -98,7 +105,7 @@ class MainActivity : BaseActivity() {
                 "widthPixels: ${displayMetrics.widthPixels} " +
                 "heightPixels: ${displayMetrics.heightPixels} " +
                 "scaledDensity: ${displayMetrics.scaledDensity} ")
-        headerText.visibility = View.VISIBLE
+        headerText.visibility = if (headerText.isVisible) View.GONE else View.VISIBLE
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)

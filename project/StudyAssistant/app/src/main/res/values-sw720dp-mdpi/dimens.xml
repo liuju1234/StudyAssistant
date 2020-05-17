@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="item_type_width">100dp</dimen>
-    <dimen name="item_content_width">1000dp</dimen>
-    <dimen name="item_width">1100dp</dimen>
-    <dimen name="item_height">100dp</dimen>
-    <dimen name="item_type_text_size">20sp</dimen>
-    <dimen name="item_content_text_size">40sp</dimen>
-    <dimen name="table_left_padding">300dp</dimen>
-    <dimen name="table_bottom_padding">100dp</dimen>
-    <dimen name="table_h_padding">70dp</dimen>
-    <dimen name="table_line_width">5dp</dimen>
-    <dimen name="table_text_size">40dp</dimen>
-    <dimen name="action_note_text_size">40sp</dimen>
+    <dimen name="item_type_width">70dp</dimen>
+    <dimen name="item_content_width">700dp</dimen>
+    <dimen name="item_width">770dp</dimen>
+    <dimen name="item_height">50dp</dimen>
+    <dimen name="item_type_text_size">15sp</dimen>
+    <dimen name="item_content_text_size">25sp</dimen>
+    <dimen name="table_left_padding">200dp</dimen>
+    <dimen name="table_bottom_padding">60dp</dimen>
+    <dimen name="table_h_padding">35dp</dimen>
+    <dimen name="table_line_width">3dp</dimen>
+    <dimen name="table_text_size">25sp</dimen>
+    <dimen name="action_note_text_size">25sp</dimen>
 </resources>
