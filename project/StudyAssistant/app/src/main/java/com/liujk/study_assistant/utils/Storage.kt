@@ -6,21 +6,27 @@ import android.util.Log
 import com.liujk.study_assistant.TAG
 import java.io.*
 import java.lang.Exception
+import kotlin.collections.ArrayList
+import kotlin.collections.HashSet
 
 object Storage {
     fun getDriverDirs(context: Context): ArrayList<File> {
-        val hashDirs: HashSet<String> = hashSetOf()
+        val hashDirs: HashSet<File> = hashSetOf()
         val driverDirs: ArrayList<File> = arrayListOf()
-        val subdir = buildPath( "Android", "data", context.packageName, "files",
+        val filesSubDir = buildPath( "Android", "data", context.packageName, "files",
             Environment.DIRECTORY_MOVIES)
         val dirs = context.getExternalFilesDirs(Environment.DIRECTORY_MOVIES)
+        val funAddToDirs: (file: File)->Unit = {
+            Log.v(TAG, "add path '$it' to driver dirs")
+            hashDirs.add(it)
+            driverDirs.add(it)
+        }
         for (dir in dirs) {
             var path = dir.path
-            val length = path.length - subdir.length - 1
+            val length = path.length - filesSubDir.length - 1
             path = path.substring(0, length)
-            Log.v(TAG, "add path '$path' to driver dirs")
-            hashDirs.add(path)
-            driverDirs.add(File(path))
+            val formatPathFile = File(path).absoluteFile.canonicalFile
+            funAddToDirs(formatPathFile)
         }
         try {
             val storageDir = File("/storage")
@@ -29,10 +35,9 @@ object Storage {
                 if (fileList != null) {
                     for (file in fileList) {
                         if (file.name != "emulated" && file.isDirectory) {
-                            if (!hashDirs.contains(file.path)) {
-                                hashDirs.add(file.path)
-                                Log.v(TAG, "add path '${file.path}' to driver dirs")
-                                driverDirs.add(file)
+                            val formatPathFile = file.absoluteFile.canonicalFile
+                            if (!hashDirs.contains(formatPathFile)) {
+                                funAddToDirs(formatPathFile)
                             }
                         }
                     }
@@ -42,6 +47,10 @@ object Storage {
             Log.e(TAG, "error:", e)
         }
         return driverDirs
+    }
+
+    fun getDefaultStorage(): File {
+        return File("/sdcard").absoluteFile.canonicalFile
     }
 
     fun findForDir(context: Context, rootDir: String): List<File> {
@@ -91,6 +100,7 @@ object Storage {
 
     fun writeStringToFile(context: Context, str: String, file: File) {
         try {
+            DocumentsUtils.mkdirs(context, file.parentFile ?: File("/"))
             val outputStream = DocumentsUtils.getOutputStream(context, file)
             if (outputStream != null) {
                 Log.d(TAG, "Get output stream for file '$file' ok!")

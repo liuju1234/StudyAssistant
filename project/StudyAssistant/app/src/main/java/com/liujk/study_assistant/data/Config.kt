@@ -21,6 +21,7 @@ const val buildInConfigRawString: String = """
     },
     "processContents": {
         "语文": {"name": "语文", "type": "class"},
+        "语文2": {"name": "语文2", "type": "class"},
         "数学": {"name": "数学", "type": "class"},
         "英语": {"name": "英语", "type": "class"},
         "班会": {"name": "班会", "type": "class"},
@@ -54,11 +55,11 @@ const val buildInConfigRawString: String = """
         {"time": {"hour":10, "minute":25}, "duration": 5,
             "processes": ["眼保健操"], "mergeCell": true},
         {"time": {"hour":10, "minute":30}, "duration": 60,
-            "processes": ["自由梳理"], "mergeCell": true},
+            "processes": ["语文2","语文2","语文2","语文2","自由梳理"]},
         {"time": {"hour":11, "minute":30}, "duration": 150,
             "processes": ["午间休息"], "mergeCell": true},
         {"time": {"hour":14, "minute":0}, "duration": 90,
-            "processes": ["美术", "科学", "道法", "音乐", "其它"], "mergeCell": true},
+            "processes": ["其它", "其它", "道法", "其它", "道法"], "mergeCell": true},
     ],
     "displayDays": [
         {"day": "星期一", "index": 0},
@@ -264,7 +265,7 @@ class Config(var rootJsons: List<JsonObject>) {
                 driverDirs = Storage.getDriverDirs(context)
             }
             if (driverDirs.isEmpty()) {
-                return File("/sdcard").absoluteFile.canonicalFile
+                return Storage.getDefaultStorage()
             }
             return driverDirs[0]
         }

@@ -2,6 +2,8 @@ package com.liujk.study_assistant.utils
 
 import android.annotation.TargetApi
 import android.content.Context
+import android.content.Intent
+import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
 import android.preference.PreferenceManager
@@ -87,6 +89,19 @@ object DocumentsUtils {
     @TargetApi(Build.VERSION_CODES.KITKAT)
     fun isOnExtSdCard(file: File, c: Context): Boolean {
         return getExtSdCardFolder(file, c) != null
+    }
+
+    fun getTreeUriForStorage(context: Context, rootPath: File): Uri? {
+        val intent = Intent(DocumentsContract.PROVIDER_INTERFACE)
+        val contentProviders: List<ResolveInfo> = context.packageManager
+            .queryIntentContentProviders(intent, 0)
+        return if (contentProviders.isNotEmpty()) {
+            val defaultAuthority = contentProviders[0].providerInfo.authority
+            val storageName = rootPath.name.toUpperCase(Locale.US)
+            Uri.parse("content://$defaultAuthority/tree/$storageName%3A")
+        } else {
+            null
+        }
     }
 
     /**

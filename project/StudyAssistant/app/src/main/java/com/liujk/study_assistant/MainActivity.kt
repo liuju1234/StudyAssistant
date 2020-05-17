@@ -2,12 +2,14 @@ package com.liujk.study_assistant
 
 import android.Manifest
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.storage.StorageManager
+import android.provider.DocumentsContract
 import android.provider.Settings
 import android.util.Log
 import android.view.View
@@ -16,6 +18,7 @@ import android.view.WindowManager
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -109,10 +112,28 @@ class MainActivity : BaseActivity() {
                 intent = volume.createAccessIntent(null)
             }
         }
+        var showNotify = false
         if (intent == null) {
-            intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                showNotify = true
+                intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                val treeUri = DocumentsUtils.getTreeUriForStorage(this, rootPath)
+                if (treeUri != null) {
+                    intent.putExtra(DocumentsContract.EXTRA_INITIAL_URI, treeUri)
+                }
+            }
         }
-        startActivityForResult(intent, MY_REQUEST_OPEN_DOCUMENT_TREE)
+        if (showNotify) {
+            AlertDialog.Builder(this)
+                .setMessage("如果需要自动创建配置文件，请在接下来的界面下方点击允许访问")
+                .setTitle("提示")
+                .setNegativeButton("确定") { _: DialogInterface, _: Int ->
+                    startActivityForResult(intent, MY_REQUEST_OPEN_DOCUMENT_TREE)
+                }
+                .show()
+        } else if (intent != null) {
+            startActivityForResult(intent, MY_REQUEST_OPEN_DOCUMENT_TREE)
+        }
     }
 
     lateinit var needWriteDriverPath: File
@@ -120,16 +141,28 @@ class MainActivity : BaseActivity() {
         val noConfigFile = Config.loadConfig(this)
         Log.v(TAG, "noConfigFile is $noConfigFile")
         if (noConfigFile) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N &&
-                Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 needWriteDriverPath = Config.getNeedWriteDriverPath(this)
                 if (DocumentsUtils.isOnExtSdCard(needWriteDriverPath, this)) {
                     showOpenDocumentTree(needWriteDriverPath)
                     return
                 }
             }
-            Log.v(TAG, "Config.writeBuildInConfig()")
-            Config.writeBuildInConfig(this)
+            afterSetStorage()
+        }
+    }
+
+    private fun afterSetStorage() {
+        Log.v(TAG, "Config.writeBuildInConfig()")
+        Config.writeBuildInConfig(this)
+    }
+
+    private fun setUriForStorage(uri: Uri?) {
+        if (uri != null) {
+            DocumentsUtils.saveTreeUri(this, needWriteDriverPath.path, uri)
+            afterSetStorage()
+        } else {
+            Log.v(TAG, "setUriForStorage(), but uri is null")
         }
     }
 
@@ -210,11 +243,8 @@ class MainActivity : BaseActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         when (requestCode) {
             MY_REQUEST_OPEN_DOCUMENT_TREE -> if (data != null && data.data != null) {
-                val uri: Uri = data.data!!
-                DocumentsUtils.saveTreeUri(this, needWriteDriverPath.path, uri)
-                //afterPermissionOK()
-                Log.v(TAG, "Config.writeBuildInConfig()")
-                Config.writeBuildInConfig(this)
+                Log.v(TAG, "onActivityResult($requestCode), data.data is ${data.data}")
+                setUriForStorage(data.data as Uri?)
             }
             else -> {
             }
