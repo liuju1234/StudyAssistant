@@ -23,7 +23,7 @@
         "午间休息": {"name": "午间休息", "type": "rest", "info": "/家务劳动"},
         "美术": {"name": "美术", "type": "class"},
         "科学": {"name": "科学", "type": "class", "alias": "科技"},
-        "道法": {"name": "道法", "type": "class", "alias": "道德法制"},
+        "道法": {"name": "道法", "type": "class", "alias": "道德"},
         "音乐": {"name": "音乐", "type": "class"},
         "其它": {"name": "其它", "type": "class", "alias": "其他"},
     },
@@ -59,28 +59,28 @@
         {"day": "星期五", "index": 4},
     ],
     "notes": {
-        "语文":
-            {"common": "",
+        "语文": {
+            "common": "",
             "days": {
                 "星期一": "空中课堂 《千人糕》1",
                 "星期二": "空中课堂 《一匹出色的的马》1",
                 "星期三": "空中课堂 《语文园地二》1",
                 "星期四": "空中课堂 《语文园地二》2",
                 "星期五": "空中课堂 《神州谣》2",
-                }
-            },
-        "语文2":
-            {"common": "",
+            }
+        },
+        "语文2": {
+            "common": "",
             "days": {
                 "星期一": "空中课堂 《千人糕》2",
                 "星期二": "空中课堂 《一匹出色的的马》2",
                 "星期三": "空中课堂 第二单元写话",
                 "星期四": "空中课堂 《神州谣》1",
                 "星期五": "",
-                }
-            },
-        "数学":
-            {"common": "",
+            }
+        },
+        "数学": {
+            "common": "",
             "days": {
                 "星期一": "观看视频：第四单元第1课《铅笔有多长》",
                 "星期二": "观看视频：第四单元第2课《一千米有多长》",
@@ -88,10 +88,10 @@
                 "星期四": "观看视频：第五单元第2课《回收废电池》",
                 "星期五": "观看视频：数学阅读《小敏做新衣》",
                 "星期六": "",
-                }
-            },
-        "英语":
-            {"common": "",
+            }
+        },
+        "英语": {
+            "common": "",
             "days": {
                 "星期一": "Unit3 Seasons Lesson 1
 看完微课后再完成当日一起小学学生APP上的作业。",
@@ -102,28 +102,28 @@
 2.阅读后，请完成后面的高频词练习、跟读、和配音等活动。",
                 "星期五": "",
                 "星期六": "",
-                }
-            },
-        "其它":
-            {"common": "科学、音乐、美术都在这",
+            }
+        },
+        "其它": {
+            "common": "科学、音乐、美术都在这",
             "days": {
                 "星期一": "",
                 "星期二": "",
                 "星期三": "",
                 "星期四": "",
                 "星期五": "",
-                }
-            },
+            }
+        },
     },
     "urls": {
-        "语文":
-            {"common": "https://v.campus.qq.com/gkk/3cumat9#/course",
+        "语文": {
+            "common": "https://v.campus.qq.com/gkk/3cumat9#/course",
             },
-        "语文2":
-            {"common": "https://v.campus.qq.com/gkk/3cumat9#/course",
+        "语文2": {
+            "common": "https://v.campus.qq.com/gkk/3cumat9#/course",
             },
-        "英语":
-            {"common": "",
+        "英语": {
+            "common": "",
             "days": {
                 "星期一": "http://tongbu.eduyun.cn/tbkt/html/weike/ernianjixia/yingyu/965CDFBB3818EED3D7C0D3C06978FB4E.html",
                 "星期二": "",
@@ -131,7 +131,25 @@
                 "星期四": "",
                 "星期五": "",
                 "星期六": "",
-                }
-            },
+            }
+        },
+    },
+    "intents": {
+        "体教通": {
+            "action": "com.tencent.mm.action.WX_SHORTCUT",
+            "component": "com.tencent.mm/.plugin.base.stub.WXShortcutEntryActivity",
+         },
+        "一起小学学生": {
+            "package": "com.A17zuoye.mobile.homework",
+            "component": "com.A17zuoye.mobile.homework/.main.activity.WelcomeActivity",
+         },
+    },
+    "apps": {
+        "体育": {
+            "common": "体教通",
+        },
+        "英语": {
+            "common": "一起小学学生",
+        },
     },
 }

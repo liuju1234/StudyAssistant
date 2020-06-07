@@ -1,6 +1,6 @@
 package com.liujk.study_assistant.action
 
-import android.content.ComponentName
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -15,6 +15,7 @@ import com.liujk.study_assistant.data.Config
 import com.liujk.study_assistant.data.ProcessContent
 import com.liujk.study_assistant.data.WeekDayInfo
 import com.liujk.study_assistant.utils.Storage
+import com.liujk.study_assistant.utils.Utils
 import com.liujk.study_assistant.view.ActionList
 import java.io.File
 
@@ -100,12 +101,21 @@ class ProcessAction(var content: ProcessContent, var day: Int,
         }
     }
 
-    private fun findActionsFromConfig() {
+    private fun addAppAction(appName: String, appIntent: Intent?) {
+        if (appIntent != null) {
+            actions.add(MyAction(ActionType.APP, appName, appIntent))
+        }
+    }
+
+    private fun findActionsFromConfig(context: Context) {
         val config = Config.getConfig()
         val urlString = config.getUrlForProcess(content.name, weekDays[day].displayStr)
         addMultiUrls(actions, urlString)
         val notesString = config.getNotesForProcess(content.name, weekDays[day].displayStr)
         addNote(notesString)
+        val appName = config.getAppNameForProcess(content.name, weekDays[day].displayStr)
+        val appIntent = config.getIntentFromName(context, appName)
+        addAppAction(appName, appIntent)
     }
 
     private fun getActions(context: Context) {
@@ -113,7 +123,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
         otherActionsMap = hashMapOf()
         note = ""
 
-        findActionsFromConfig()
+        findActionsFromConfig(context)
         val rootDirs = Storage.findForDir(context, Config.ROOT_DIR)
         for (rootDir in rootDirs) {
             val (processRoots, _) = Storage.findDirsByNames(rootDir, content.names)
@@ -162,7 +172,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
                             || lineTrim.startsWith("https://"))) {
                     actions.add(MyAction(ActionType.URL, lineTrim))
                 } else if (type == ActionType.APP) {
-                    actions.add(MyAction(ActionType.APP, lineTrim))
+                    addAppAction(lineTrim, Utils.intentFromComponentName(lineTrim))
                 }
             }
         }
@@ -180,7 +190,7 @@ class ProcessAction(var content: ProcessContent, var day: Int,
     }
 }
 
-class MyAction(var type: ActionType, var param: String) : Comparable<MyAction> {
+class MyAction(var type: ActionType, var param: String, var appIntent: Intent? = null) : Comparable<MyAction> {
     var display = param
     init {
         if (type == ActionType.VIDEO) {
@@ -215,11 +225,14 @@ class MyAction(var type: ActionType, var param: String) : Comparable<MyAction> {
                 context.startActivity(intent)
             } else if (type == ActionType.APP) {
                 Toast.makeText(context, "即将打开应用：$param", Toast.LENGTH_SHORT).show()
-                val intent = Intent(Intent.ACTION_MAIN)
-                val strings = param.split("/", limit = 2)
-                if (strings.lastIndex >= 1) {
-                    intent.component = ComponentName(strings[0], strings[1])
-                    context.startActivity(intent)
+                appIntent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                if (context is Activity) {
+                    if (appIntent != null) {
+                        val intent = appIntent as Intent
+                        context.startActivityIfNeeded(intent, 100)
+                    }
+                } else {
+                    context.startActivity(appIntent)
                 }
             }
         } catch (e: Exception) {
@@ -228,7 +241,11 @@ class MyAction(var type: ActionType, var param: String) : Comparable<MyAction> {
     }
 
     override fun toString(): String {
-        return "Action{$type, $param}"
+        if (appIntent == null) {
+            return "Action{$type, $param}"
+        } else {
+            return "Action{$type, $param, $appIntent}"
+        }
     }
 
     override fun compareTo(other: MyAction): Int {

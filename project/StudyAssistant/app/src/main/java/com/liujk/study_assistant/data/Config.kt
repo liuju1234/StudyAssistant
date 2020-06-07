@@ -1,10 +1,12 @@
 package com.liujk.study_assistant.data
 
 import android.content.Context
+import android.content.Intent
 import com.beust.klaxon.JsonArray
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.liujk.study_assistant.utils.Storage
+import com.liujk.study_assistant.utils.Utils
 import java.io.File
 import java.lang.StringBuilder
 
@@ -33,7 +35,7 @@ const val buildInConfigRawString: String = """
         "午间休息": {"name": "午间休息", "type": "rest", "info": "/家务劳动"},
         "美术": {"name": "美术", "type": "class"},
         "科学": {"name": "科学", "type": "class", "alias": "科技"},
-        "道法": {"name": "道法", "type": "class", "alias": "道德法制"},
+        "道法": {"name": "道法", "type": "class", "alias": "道德"},
         "音乐": {"name": "音乐", "type": "class"},
         "其它": {"name": "其它", "type": "class"},
     },
@@ -69,58 +71,76 @@ const val buildInConfigRawString: String = """
         {"day": "星期五", "index": 4},
     ],
     "notes": {
-        "语文":
-            {"common": "",
+        "语文": {
+            "common": "",
             "days": {
                 "星期一": "",
                 "星期二": "",
                 "星期三": "",
                 "星期四": "",
                 "星期五": "",
-                }
-            },
-        "数学":
-            {"common": "",
+            }
+        },
+        "数学": {
+            "common": "",
             "days": {
                 "星期一": "",
                 "星期二": "",
                 "星期三": "",
                 "星期四": "",
                 "星期五": "",
-                }
-            },
-        "英语":
-            {"common": "",
+            }
+        },
+        "英语": {
+            "common": "",
             "days": {
                 "星期一": "",
                 "星期二": "",
                 "星期三": "",
                 "星期四": "",
                 "星期五": "",
-                }
-            },
+            }
+        },
     },
     "urls": {
-        "语文":
-            {"common": "https://v.campus.qq.com/gkk/3cumat9#/course",
+        "语文": {
+            "common": "https://v.campus.qq.com/gkk/3cumat9#/course",
             "days": {
                 "星期一": "",
                 "星期二": "",
                 "星期三": "",
                 "星期四": "",
                 "星期五": "",
-                }
-            },
-        "英语":
-            {"common": "",
+            }
+        },
+        "英语": {
+            "common": "",
             "days": {
                 "星期一": "",
                 "星期二": "",
                 "星期三": "",
                 "星期四": "",
                 "星期五": "",
-                }
-            },
+            }
+        },
+    },
+    "intents": {
+        "体教通": {
+            "action": "com.tencent.mm.action.WX_SHORTCUT",
+            "component": "com.tencent.mm/.plugin.base.stub.WXShortcutEntryActivity",
+         },
+        "一起小学学生": {
+            "package": "com.A17zuoye.mobile.homework",
+            "component": "com.A17zuoye.mobile.homework/.main.activity.WelcomeActivity",
+         },
+    },
+    "apps": {
+        "体育": {
+            "common": "体教通",
+        },
+        "英语": {
+            "common": "一起小学学生",
+        },
     },
 }
 """
@@ -177,6 +197,28 @@ class Config(var rootJsons: List<JsonObject>) {
         )
     }
 
+    fun getIntentFromName(context: Context, appName: String): Intent? {
+        var intent: Intent? = null
+        if (appName != "") {
+            val allIntentsCfg = getFromConfigs<JsonObject>("intents")
+            val intentCfg = allIntentsCfg[appName] as JsonObject
+            val action = intentCfg["action"] as String?
+            val componentNameStr = intentCfg["component"] as String ?: ""
+            val packageName = intentCfg["package"] as String?
+
+            intent = if (packageName != null) {
+                Utils.intentFromPackageName(context, packageName)
+            } else {
+                Utils.intentFromComponentName(componentNameStr, action)
+            }
+        }
+        return intent
+    }
+
+    fun getAppNameForProcess(processName: String, day: String): String {
+        return getInfoForProcess("apps", processName, day, true)
+    }
+
     fun getUrlForProcess(processName: String, day: String): String {
         return getInfoForProcess("urls", processName, day)
     }
@@ -185,15 +227,20 @@ class Config(var rootJsons: List<JsonObject>) {
         return getInfoForProcess("notes", processName, day)
     }
 
-    private fun getInfoForProcess(infoName:String, processName: String, day: String): String {
+    private fun getInfoForProcess(infoName:String, processName: String, day: String, justOne: Boolean = false): String {
         val infoCfg = getFromConfigs<JsonObject>(infoName)
         val processInfoCfg = infoCfg[processName] as JsonObject?
         val commonInfo = processInfoCfg?.get("common") as String? ?: ""
         val dayInfo = (processInfoCfg?.get("days") as JsonObject?)?.get(day) as String? ?: ""
-        return if (commonInfo != "" && dayInfo != "") {
-            commonInfo + '\n' + dayInfo
+        return if (justOne) {
+            if (commonInfo != "") commonInfo
+            else dayInfo
         } else {
-            commonInfo + dayInfo
+            if (commonInfo != "" && dayInfo != "") {
+                commonInfo + '\n' + dayInfo
+            } else {
+                commonInfo + dayInfo
+            }
         }
     }
 
