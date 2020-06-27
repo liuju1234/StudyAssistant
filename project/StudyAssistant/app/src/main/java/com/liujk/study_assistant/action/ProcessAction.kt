@@ -31,8 +31,8 @@ enum class RunStatus {
     IDLE, RUNNING
 }
 
-class ProcessAction(var content: ProcessContent, var day: Int,
-                    var weekDays: ArrayList<WeekDayInfo>) {
+class ProcessAction(var content: ProcessContent, var displayIndex: Int,
+                    var displayDays: ArrayList<WeekDayInfo>) {
     var status: RunStatus = RunStatus.IDLE
     private var actions:ArrayList<MyAction> = arrayListOf()
     private var otherActionsMap: HashMap<String, ArrayList<MyAction>> = hashMapOf()
@@ -109,11 +109,11 @@ class ProcessAction(var content: ProcessContent, var day: Int,
 
     private fun findActionsFromConfig(context: Context) {
         val config = Config.getConfig()
-        val urlString = config.getUrlForProcess(content.name, weekDays[day].displayStr)
+        val urlString = config.getUrlForProcess(content.name, displayDays[displayIndex].displayStr)
         addMultiUrls(actions, urlString)
-        val notesString = config.getNotesForProcess(content.name, weekDays[day].displayStr)
+        val notesString = config.getNotesForProcess(content.name, displayDays[displayIndex].displayStr)
         addNote(notesString)
-        val appName = config.getAppNameForProcess(content.name, weekDays[day].displayStr)
+        val appName = config.getAppNameForProcess(content.name, displayDays[displayIndex].displayStr)
         val appIntent = config.getIntentFromName(context, appName)
         addAppAction(appName, appIntent)
     }
@@ -129,13 +129,13 @@ class ProcessAction(var content: ProcessContent, var day: Int,
             val (processRoots, _) = Storage.findDirsByNames(rootDir, content.names)
             for (processRoot in processRoots) {
                 findActionsFromOneDir(actions, processRoot)
-                val (processDayDirs, otherDirs) = Storage.findDirsByNames(processRoot, weekDays[day].alias)
+                val (processDayDirs, otherDirs) = Storage.findDirsByNames(processRoot, displayDays[displayIndex].alias)
                 for (processDayDir in processDayDirs) {
                     findActionsFromOneDir(actions, processDayDir, true)
                 }
                 for (otherDir in otherDirs) {
                     var notDaysDir = true
-                    for (day in weekDays) {
+                    for (day in displayDays) {
                         for (name in day.alias) {
                             if (otherDir.name.contains(name)) {
                                 notDaysDir = false
