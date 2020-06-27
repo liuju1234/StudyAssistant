@@ -164,7 +164,7 @@ class Config(var rootJsons: List<JsonObject>) {
 
         fun writeBuildInConfig(context: Context) {
             val fileToWrite = File(Storage.buildPath(getNeedWriteDriverPath(context).path, ROOT_DIR, CFG_FILE_NAME))
-            Storage.writeStringToFile(context, buildInConfigRawString, fileToWrite)
+            Storage.writeStringToFile(context, BuildInData.configRawString, fileToWrite)
         }
 
         fun getNeedWriteDriverPath(context: Context): File {

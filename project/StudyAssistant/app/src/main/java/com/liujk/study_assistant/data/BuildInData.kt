@@ -45,7 +45,7 @@ object BuildInData {
         {"time": {"hour":9, "minute":30}, "duration": 30,
             "processes": ["体育"], "mergeCell": true},
         {"time": {"hour":10, "minute":0}, "duration": 25,
-            "processes": ["英语", "英语", "英语", "英语", "班会", "英语"]},
+            "processes": ["英语", "英语", "英语", "英语", "班会"]},
         {"time": {"hour":10, "minute":25}, "duration": 5,
             "processes": ["眼保健操"], "mergeCell": true},
         {"time": {"hour":10, "minute":30}, "duration": 60,
